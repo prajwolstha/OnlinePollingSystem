@@ -3,76 +3,70 @@ session_start();
 
 $conn = new mysqli('localhost', 'root', '', 'poll');
 
+// Fetch user details
 $email = $_SESSION['email'];
 $sql = "SELECT * FROM prayojan WHERE email='$email'";
 $result = $conn->query($sql);
 $user = $result->fetch_assoc();
-$verified = $user['verified'];
+$profile_pic = $user['profile_pic'] ?? 'uploads/default_profile.png'; // Fallback to default profile picture
 
-// If the user submits verification documents
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_verification'])) {
-    $userId = $user['id'];
-    $documentPath = '';
-    $photoPath = '';
+$error_message = "";
 
-    // Ensure the 'uploads' directory exists
-    if (!is_dir('uploads')) {
-        mkdir('uploads', 0777, true);
-    }
+// Handle profile update
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
+    $updatedName = $_POST['name'];
+    $updatedEmail = $_POST['email'];
 
-    // Check and upload the passport-size photo
-    if (!empty($_FILES['passport_photo']['name'])) {
-        $photoPath = 'uploads/' . basename($_FILES['passport_photo']['name']);
-        if (!move_uploaded_file($_FILES['passport_photo']['tmp_name'], $photoPath)) {
-            echo "<div class='alert alert-danger'>Failed to upload passport photo.</div>";
-        }
-    }
-
-    // Check and upload the ID document
-    if (!empty($_FILES['id_document']['name'])) {
-        $documentPath = 'uploads/' . basename($_FILES['id_document']['name']);
-        if (!move_uploaded_file($_FILES['id_document']['tmp_name'], $documentPath)) {
-            echo "<div class='alert alert-danger'>Failed to upload ID document.</div>";
-        }
-    }
-
-    // Insert into verification_documents table
-    if ($photoPath && $documentPath) {
-        $sql = "INSERT INTO verification_documents (user_id, document, photo, status) 
-                VALUES ('$userId', '$documentPath', '$photoPath', 'pending')";
-        if ($conn->query($sql) === TRUE) {
-            echo "<div class='alert alert-success'>Documents submitted for verification.</div>";
-        } else {
-            echo "<div class='alert alert-danger'>Error: " . $conn->error . "</div>";
-        }
+    // Update query
+    $sql = "UPDATE prayojan SET name='$updatedName', email='$updatedEmail' WHERE email='$email'";
+    if ($conn->query($sql) === TRUE) {
+        $error_message = "Profile updated successfully.";
     } else {
-        echo "<div class='alert alert-danger'>Please upload both passport photo and ID document.</div>";
+        $error_message = "Error updating profile: " . $conn->error;
     }
 }
 
-// Handle poll creation
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_poll'])) {
-    $poll_question = $_POST['poll_question'];
-    $options = array_filter($_POST['options']); // Remove empty options
+// Handle password change
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['change_password'])) {
+    $currentPassword = $_POST['current_password'];
+    $newPassword = $_POST['new_password'];
+    $confirmPassword = $_POST['confirm_password'];
 
-    if (!empty($poll_question) && count($options) > 1) {
-        // Insert poll into the polls table
-        $sql = "INSERT INTO polls (question) VALUES ('$poll_question')";
-        if ($conn->query($sql) === TRUE) {
-            $poll_id = $conn->insert_id; // Get the ID of the newly created poll
-
-            // Insert each option into the poll_options table
-            foreach ($options as $option) {
-                $sql = "INSERT INTO poll_options (poll_id, option_text) VALUES ('$poll_id', '$option')";
-                $conn->query($sql);
+    if ($newPassword == $confirmPassword) {
+        // Check if current password is correct
+        $currentPasswordHashed = md5($currentPassword);
+        if ($user['password'] == $currentPasswordHashed) {
+            // Update password
+            $newPasswordHashed = md5($newPassword);
+            $sql = "UPDATE prayojan SET password='$newPasswordHashed' WHERE email='$email'";
+            if ($conn->query($sql) === TRUE) {
+                $error_message = "Password changed successfully.";
+            } else {
+                $error_message = "Error updating password: " . $conn->error;
             }
-
-            echo "<div class='alert alert-success'>Poll created successfully!</div>";
         } else {
-            echo "<div class='alert alert-danger'>Error: " . $conn->error . "</div>";
+            $error_message = "Current password is incorrect.";
         }
     } else {
-        echo "<div class='alert alert-danger'>Please provide a question and at least two options.</div>";
+        $error_message = "New passwords do not match.";
+    }
+}
+
+// Handle profile picture update
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile_pic'])) {
+    // Handle profile picture upload
+    if (!empty($_FILES['profile_pic']['name'])) {
+        $profilePicPath = 'uploads/' . basename($_FILES['profile_pic']['name']);
+        if (move_uploaded_file($_FILES['profile_pic']['tmp_name'], $profilePicPath)) {
+            $sql = "UPDATE prayojan SET profile_pic='$profilePicPath' WHERE email='$email'";
+            if ($conn->query($sql) === TRUE) {
+                $error_message = "Profile picture updated successfully!";
+            } else {
+                $error_message = "Error updating profile picture: " . $conn->error;
+            }
+        } else {
+            $error_message = "Failed to upload profile picture.";
+        }
     }
 }
 ?>
@@ -85,94 +79,170 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_poll'])) {
     <title>User Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        /* Styling for error message */
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            text-align: center;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+
+        /* Profile Section */
         .section {
             padding: 20px;
             border: 1px solid #ccc;
             border-radius: 8px;
             margin: 15px 0;
-            background-color: #f8f9fa;
+            background-color: white;
+        }
+
+        .profile-pic {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 2px solid #ddd;
+        }
+
+        /* Layout Styles */
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: #0d1b2a; /* Dark blue color */
+            color: white;
+            padding: 20px;
+        }
+
+        .content {
+            flex-grow: 1;
+            padding: 20px;
+            background-color: #f5f5f5; /* Light background color */
+        }
+
+        .sidebar h4 {
+            color: white;
+            margin-top: 10px;
+        }
+
+        .verified {
+            color: blue;
+            margin-left: 5px;
+        }
+
+        .menu-item {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 15px 0;
+            border-bottom: 1px solid #324c65;
+        }
+
+        .menu-item:hover {
+            background-color: #1a2c41;
+            cursor: pointer;
         }
 
         .section h3 {
             margin-bottom: 15px;
         }
 
-        .btn-create-poll {
-            margin-top: 10px;
-        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2 class="mt-5">Welcome, <?php echo htmlspecialchars($email); ?></h2>
-        
-        <!-- Verification Status Section -->
-        <div class="section">
-            <h3>Verification Status</h3>
-            <?php if ($verified): ?>
-                <div class="alert alert-success">You are verified and can create polls.</div>
-            <?php else: ?>
-                <div class="alert alert-warning">You are not verified. You can only vote on existing polls.</div>
-                
-                <!-- Document Upload Form -->
-                <form method="post" action="" enctype="multipart/form-data">
-                    <div class="mb-3">
-                        <label for="passport_photo" class="form-label">Upload Passport-size Photo:</label>
-                        <input type="file" class="form-control" id="passport_photo" name="passport_photo" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="id_document" class="form-label">Upload ID Document (Citizenship/Passport):</label>
-                        <input type="file" class="form-control" id="id_document" name="id_document" required>
-                    </div>
-                    <button type="submit" name="submit_verification" class="btn btn-primary">Submit for Verification</button>
-                </form>
-            <?php endif; ?>
+
+    <!-- Display error message if exists -->
+    <?php if (!empty($error_message)): ?>
+        <div class="error-message">
+            <?php echo htmlspecialchars($error_message); ?>
+        </div>
+    <?php endif; ?>
+
+    <!-- Sidebar Section -->
+    <div class="sidebar">
+        <div class="text-center">
+            <img src="<?php echo htmlspecialchars($profile_pic); ?>" alt="Profile Picture" class="profile-pic">
+            <h4>
+                <?php echo htmlspecialchars($user['name']); ?>
+                <?php if ($user['verified']): ?>
+                    <span class="verified"><img src="verified.png" alt="img"></span> <!-- Blue Tick for verified users -->
+                <?php endif; ?>
+            </h4>
         </div>
 
-        <!-- Poll Sections (Visible to All Users) -->
-        <div class="section">
-            <h3>Available Polls</h3>
-            <p>Vote on existing polls.</p>
-            <a href="polls.php" class="btn btn-primary">Go to Available Polls</a> <!-- Redirects to polls.php -->
+        <!-- Sidebar Menu -->
+        <div class="menu">
+            <a href="welcome.php" class="menu-item menu-item-active">Profile</a>
+            <a href="poll_management.php" class="menu-item">Poll Management</a>
+            <a href="poll_results.php" class="menu-item">Poll Results</a>
+            <a href="notifications.php" class="menu-item">
+                Notifications
+            </a>
+            <a href="user_analytics.php" class="menu-item">User Analytics</a>
         </div>
-
-        <!-- Create Poll Sections (Visible Only to Verified Users) -->
-        <?php if ($verified): ?>
-            <div class="section">
-                <h3>Create New Poll</h3>
-                <p>As a verified user, you can create new polls.</p>
-
-                <!-- Poll Creation Form -->
-                <form method="POST" action="">
-                    <div class="mb-3">
-                        <label for="poll_question" class="form-label">Poll Question:</label>
-                        <input type="text" class="form-control" id="poll_question" name="poll_question" required>
-                    </div>
-
-                    <!-- Poll Options -->
-                    <div class="mb-3">
-                        <label for="option1" class="form-label">Option 1:</label>
-                        <input type="text" class="form-control" id="option1" name="options[]" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="option2" class="form-label">Option 2:</label>
-                        <input type="text" class="form-control" id="option2" name="options[]" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="option3" class="form-label">Option 3 (Optional):</label>
-                        <input type="text" class="form-control" id="option3" name="options[]">
-                    </div>
-                    <div class="mb-3">
-                        <label for="option4" class="form-label">Option 4 (Optional):</label>
-                        <input type="text" class="form-control" id="option4" name="options[]">
-                    </div>
-
-                    <button type="submit" name="submit_poll" class="btn btn-primary">Create Poll</button>
-                </form>
-            </div>
-        <?php endif; ?>
-
-        <a href="logout.php" class="btn btn-danger mt-3">Logout</a>
     </div>
+
+    <!-- Content Section -->
+    <div class="content">
+        <!-- User Profile Section -->
+        <div class="section">
+            <h3>Your Profile</h3>
+            <form method="POST" action="welcome.php">
+                <div class="mb-3">
+                    <label for="name" class="form-label">Name</label>
+                    <input type="text" class="form-control" id="name" name="name" value="<?php echo htmlspecialchars($user['name']); ?>" required>
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>" required>
+                </div>
+                <button type="submit" name="update_profile" class="btn btn-primary">Update Profile</button>
+            </form>
+        </div>
+
+        <!-- Change Password Section -->
+        <div class="section">
+            <h3>Change Password</h3>
+            <form method="POST" action="welcome.php">
+                <div class="mb-3">
+                    <label for="current_password" class="form-label">Current Password</label>
+                    <input type="password" class="form-control" id="current_password" name="current_password" required>
+                </div>
+                <div class="mb-3">
+                    <label for="new_password" class="form-label">New Password</label>
+                    <input type="password" class="form-control" id="new_password" name="new_password" required>
+                </div>
+                <div class="mb-3">
+                    <label for="confirm_password" class="form-label">Confirm New Password</label>
+                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                </div>
+                <button type="submit" name="change_password" class="btn btn-warning">Change Password</button>
+            </form>
+        </div>
+
+        <!-- Update Profile Picture Section -->
+        <div class="section">
+            <h3>Update Profile Picture</h3>
+            <img src="<?php echo htmlspecialchars($profile_pic); ?>" alt="Profile Picture" class="profile-pic mb-3">
+            <form method="POST" action="welcome.php" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <input type="file" class="form-control" name="profile_pic" required>
+                </div>
+                <button type="submit" name="update_profile_pic" class="btn btn-success">Update Profile Picture</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
