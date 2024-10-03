@@ -9,7 +9,7 @@ if (!isset($_SESSION['admin_logged_in'])) {
 
 $conn = new mysqli('localhost', 'root', '', 'poll');
 
-// Fetch unread notifications
+// Fetch unread notifications (poll creation notifications)
 $notificationSql = "SELECT * FROM notifications WHERE is_read = FALSE";
 $notifications = $conn->query($notificationSql);
 
