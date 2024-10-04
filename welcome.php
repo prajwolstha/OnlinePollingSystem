@@ -169,28 +169,29 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile_pic']))
     <?php endif; ?>
 
     <!-- Sidebar Section -->
-    <div class="sidebar">
-        <div class="text-center">
-            <img src="<?php echo htmlspecialchars($profile_pic); ?>" alt="Profile Picture" class="profile-pic">
-            <h4>
-                <?php echo htmlspecialchars($user['name']); ?>
-                <?php if ($user['verified']): ?>
-                    <span class="verified"><img src="verified.png" alt="img"></span> <!-- Blue Tick for verified users -->
-                <?php endif; ?>
-            </h4>
-        </div>
-
-        <!-- Sidebar Menu -->
-        <div class="menu">
-            <a href="welcome.php" class="menu-item menu-item-active">Profile</a>
-            <a href="poll_management.php" class="menu-item">Poll Management</a>
-            <a href="poll_results.php" class="menu-item">Poll Results</a>
-            <a href="notifications.php" class="menu-item">
-                Notifications
-            </a>
-            <a href="user_analytics.php" class="menu-item">User Analytics</a>
-        </div>
+    <!-- Sidebar Section -->
+<div class="sidebar">
+    <div class="text-center">
+        <img src="<?php echo htmlspecialchars($profile_pic); ?>" alt="Profile Picture" class="profile-pic">
+        <h4>
+            <?php echo htmlspecialchars($user['name']); ?>
+            <?php if ($user['verified']): ?>
+                <span class="verified"><img src="verified.png" alt="img"></span> <!-- Blue Tick for verified users -->
+            <?php endif; ?>
+        </h4>
     </div>
+
+    <!-- Sidebar Menu -->
+    <div class="menu">
+        <a href="welcome.php" class="menu-item menu-item-active">Profile</a>
+        <a href="poll_management.php" class="menu-item">Poll Management</a>
+        <a href="poll_results.php" class="menu-item">Poll Results</a>
+        <a href="notifications.php" class="menu-item">Notifications</a>
+        <a href="user_analytics.php" class="menu-item">User Analytics</a>
+        <a href="vote.php" class="menu-item">Vote</a> <!-- New Vote section added here -->
+    </div>
+</div>
+
 
     <!-- Content Section -->
     <div class="content">

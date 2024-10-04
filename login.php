@@ -1,4 +1,5 @@
 <?php
+session_start();
 // Database connection
 $conn = new mysqli('localhost', 'root', '', 'poll');
 

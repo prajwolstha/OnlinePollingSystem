@@ -9,7 +9,12 @@ if (!isset($_SESSION['admin_logged_in'])) {
 
 $conn = new mysqli('localhost', 'root', '', 'poll');
 
-// Fetch unread notifications (poll creation notifications)
+// Check for connection errors
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Fetch unread notifications (poll creation and document submission notifications)
 $notificationSql = "SELECT * FROM notifications WHERE is_read = FALSE";
 $notifications = $conn->query($notificationSql);
 
@@ -21,6 +26,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_action'])) {
     $documentId = $_POST['document_id'];
     $action = $_POST['user_action'];
     $status = ($action === 'approve') ? 'approved' : 'rejected';
+    
+    // Update the verification status in the verification_documents table
     $sql = "UPDATE verification_documents SET status='$status' WHERE id='$documentId'";
     if ($conn->query($sql) === TRUE) {
         if ($status === 'approved') {
@@ -28,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_action'])) {
             $userId = $_POST['user_id'];
             $conn->query("UPDATE prayojan SET verified=TRUE WHERE id='$userId'");
         }
-        echo "<div class='alert alert-success'>User verification updated.</div>";
+        echo "<div class='alert alert-success'>User verification updated successfully.</div>";
     } else {
         echo "<div class='alert alert-danger'>Error: " . $conn->error . "</div>";
     }
@@ -138,6 +145,7 @@ $users = $conn->query($sql);
             <!-- User Management Tab -->
             <div role="tabpanel" class="tab-pane" id="users">
                 <h3>Manage Users</h3>
+                <!-- Pending Verifications Section -->
                 <?php if ($pendingVerifications->num_rows > 0): ?>
                     <h4>Pending Verifications</h4>
                     <table class="table table-bordered mt-3">
@@ -171,6 +179,7 @@ $users = $conn->query($sql);
                     <div class="alert alert-info">No pending verifications.</div>
                 <?php endif; ?>
 
+                <!-- All Users Section -->
                 <h4>All Users</h4>
                 <?php if ($users->num_rows > 0): ?>
                     <table class="table table-bordered mt-3">

@@ -8,15 +8,31 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Fetch all active polls (that the user has not voted on)
-$sql = "SELECT polls.id, polls.question, polls.category, polls.start_date, polls.end_date 
-        FROM polls 
-        WHERE polls.end_date >= CURDATE()";
-$pollsResult = $conn->query($sql);
+// Fetch active polls
+$pollsSql = "SELECT * FROM polls WHERE end_date >= CURDATE()";
+$pollsResult = $conn->query($pollsSql);
 
-// Check if the query was successful
-if ($pollsResult === false) {
-    die("Error fetching polls: " . $conn->error); // Display the SQL error if any
+// Handle vote submission
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_vote'])) {
+    $poll_id = $_POST['poll_id'];
+    $selected_option = $_POST['option'];
+    $user_id = $_SESSION['id']; // Assume user_id is stored in session when logged in
+
+    // Check if the user has already voted in this poll
+    $checkVoteSql = "SELECT * FROM votes WHERE user_id='$user_id' AND poll_id='$poll_id'";
+    $voteResult = $conn->query($checkVoteSql);
+
+    if ($voteResult->num_rows == 0) {
+        // Insert vote
+        $insertVoteSql = "INSERT INTO votes (user_id, poll_id, option_id) VALUES ('$user_id', '$poll_id', '$selected_option')";
+        if ($conn->query($insertVoteSql) === TRUE) {
+            echo "<div class='alert alert-success'>Vote submitted successfully!</div>";
+        } else {
+            echo "<div class='alert alert-danger'>Error submitting vote: " . $conn->error . "</div>";
+        }
+    } else {
+        echo "<div class='alert alert-warning'>You have already voted in this poll.</div>";
+    }
 }
 ?>
 
@@ -25,39 +41,36 @@ if ($pollsResult === false) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vote</title>
+    <title>Vote on Poll</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
     <div class="container">
-        <h2 class="mt-5">Available Polls</h2>
+        <h2 class="mt-5">Vote on Poll</h2>
         <?php if ($pollsResult->num_rows > 0): ?>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Poll Question</th>
-                        <th>Category</th>
-                        <th>Start Date</th>
-                        <th>End Date</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php while ($poll = $pollsResult->fetch_assoc()): ?>
-                        <tr>
-                            <td><?php echo htmlspecialchars($poll['question']); ?></td>
-                            <td><?php echo htmlspecialchars($poll['category']); ?></td>
-                            <td><?php echo htmlspecialchars($poll['start_date']); ?></td>
-                            <td><?php echo htmlspecialchars($poll['end_date']); ?></td>
-                            <td>
-                                <a href="vote_on_poll.php?poll_id=<?php echo $poll['id']; ?>" class="btn btn-primary btn-sm">Vote</a>
-                            </td>
-                        </tr>
-                    <?php endwhile; ?>
-                </tbody>
-            </table>
+            <?php while ($poll = $pollsResult->fetch_assoc()): ?>
+                <div class="mb-4">
+                    <h5><?php echo htmlspecialchars($poll['question']); ?></h5>
+                    <?php
+                    $optionsSql = "SELECT * FROM poll_options WHERE poll_id=" . $poll['id'];
+                    $optionsResult = $conn->query($optionsSql);
+                    ?>
+                    <form method="POST" action="vote.php">
+                        <input type="hidden" name="poll_id" value="<?php echo $poll['id']; ?>">
+                        <?php while ($option = $optionsResult->fetch_assoc()): ?>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="option" id="option<?php echo $option['id']; ?>" value="<?php echo $option['id']; ?>" required>
+                                <label class="form-check-label" for="option<?php echo $option['id']; ?>">
+                                    <?php echo htmlspecialchars($option['option_text']); ?>
+                                </label>
+                            </div>
+                        <?php endwhile; ?>
+                        <button type="submit" name="submit_vote" class="btn btn-primary mt-3">Submit Vote</button>
+                    </form>
+                </div>
+            <?php endwhile; ?>
         <?php else: ?>
-            <p>No active polls available to vote on.</p>
+            <div class="alert alert-info">No active polls available for voting.</div>
         <?php endif; ?>
     </div>
 

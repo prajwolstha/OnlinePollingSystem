@@ -9,6 +9,9 @@ if ($conn->connect_error) {
 }
 
 // Fetch poll ID
+if (!isset($_GET['poll_id'])) {
+    die("No poll selected.");
+}
 $poll_id = $_GET['poll_id'];
 
 // Fetch poll options
@@ -21,8 +24,13 @@ if (!$result) {
 
 // Handle vote submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_vote'])) {
-    $selected_option = $_POST['option'];
+    // Ensure user is logged in
+    if (!isset($_SESSION['id'])) {
+        die("User not logged in or session expired.");
+    }
     $user_id = $_SESSION['id'];  // Use 'id' because that's the correct key in the session
+
+    $selected_option = $_POST['option'];
 
     // Check if the user has already voted in this poll
     $checkVoteSql = "SELECT * FROM votes WHERE user_id='$user_id' AND poll_id='$poll_id'";
