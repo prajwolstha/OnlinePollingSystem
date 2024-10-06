@@ -82,7 +82,7 @@ $polls = $conn->query($sql);
             <img src="<?php echo htmlspecialchars($profile_pic); ?>" alt="Profile Picture" class="profile-pic">
             <h4><?php echo htmlspecialchars($user['name']); ?></h4>
             <?php if ($user['verified']): ?>
-                <span class="verified"><img src="verified.png" alt="Verified"></span> <!-- Verification logo -->
+                <span class="verified"><img src="verified.png" alt="img"></span> <!-- Verification logo -->
             <?php endif; ?>
         </div>
 

@@ -105,6 +105,7 @@ if ($pollsResult === false) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         /* Styling for the sidebar and content */
+        /* Sidebar and content layout styling */
         .sidebar {
             width: 250px;
             background-color: #0d1b2a;
@@ -130,6 +131,14 @@ if ($pollsResult === false) {
         .menu-item:hover {
             background-color: #1a2c41;
             cursor: pointer;
+        }
+
+        .profile-pic {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 2px solid #ddd;
         }
 
         .section {
@@ -162,7 +171,7 @@ if ($pollsResult === false) {
             <img src="<?php echo htmlspecialchars($user['profile_pic']); ?>" alt="Profile Picture" class="profile-pic">
             <h4><?php echo htmlspecialchars($user['name']); ?></h4>
             <?php if ($user['verified']): ?>
-                <span class="verified">Verified</span>
+                <span class="verified"><img src="verified.png" alt="img"></span>
             <?php endif; ?>
         </div>
         <!-- Sidebar Menu -->
