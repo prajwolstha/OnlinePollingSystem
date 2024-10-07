@@ -55,45 +55,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_poll'])) {
         echo "<div class='alert alert-warning'>You need to be verified to create a poll. Please submit your documents for verification.</div>";
     }
 }
-
-// Handle verification document upload for non-verified users
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_verification'])) {
-    $passportDoc = $_FILES['passport_doc'];
-    $passportPhoto = $_FILES['passport_photo'];
-
-    // Ensure the upload directory exists
-    $uploadDir = 'uploads/verification_docs/';
-    if (!is_dir($uploadDir)) {
-        mkdir($uploadDir, 0777, true); // Create the directory with appropriate permissions
-    }
-
-    // Define paths for uploaded files
-    $passportDocPath = $uploadDir . basename($passportDoc['name']);
-    $passportPhotoPath = $uploadDir . basename($passportPhoto['name']);
-
-    // Move uploaded files to the destination directory
-    if (move_uploaded_file($passportDoc['tmp_name'], $passportDocPath) && move_uploaded_file($passportPhoto['tmp_name'], $passportPhotoPath)) {
-        // Insert document details into verification_documents table
-        $sql = "INSERT INTO verification_documents (user_id, document, photo, status) 
-                VALUES ('$user_id', '$passportDocPath', '$passportPhotoPath', 'pending')";
-        if ($conn->query($sql) === TRUE) {
-            echo "<div class='alert alert-success'>Documents uploaded successfully. Please wait for verification.</div>";
-        } else {
-            echo "<div class='alert alert-danger'>Error saving documents in the database: " . $conn->error . "</div>";
-        }
-    } else {
-        echo "<div class='alert alert-danger'>Error uploading documents. Please try again.</div>";
-    }
-}
-
-// Fetch active polls created by the user
-$pollsSql = "SELECT * FROM polls WHERE id='$user_id' AND end_date >= CURDATE()";
-$pollsResult = $conn->query($pollsSql);
-
-// Check if the query was successful
-if ($pollsResult === false) {
-    die("Error fetching polls: " . $conn->error); // Display the SQL error if any
-}
 ?>
 
 <!DOCTYPE html>
@@ -185,7 +146,6 @@ if ($pollsResult === false) {
             font-size: 14px;
             font-weight: bold;
         }
-
     </style>
 </head>
 <body>
@@ -220,27 +180,27 @@ if ($pollsResult === false) {
                 <h3>Create a New Poll</h3>
 
                 <div class="poll-types">
-                    <div class="poll-type" onclick="showPollTemplate('mcq')">
+                    <div class="poll-type" onclick="scrollToSection('mcq')">
                         <img src="icons/mcq_icon.png" alt="Multiple Choice">
                         <span>Multiple Choice</span>
                     </div>
-                    <div class="poll-type" onclick="showPollTemplate('word_cloud')">
+                    <div class="poll-type" onclick="scrollToSection('word_cloud')">
                         <img src="icons/word_cloud_icon.png" alt="Word Cloud">
                         <span>Word Cloud</span>
                     </div>
-                    <div class="poll-type" onclick="showPollTemplate('quiz')">
+                    <div class="poll-type" onclick="scrollToSection('quiz')">
                         <img src="icons/quiz_icon.png" alt="Quiz">
                         <span>Quiz</span>
                     </div>
-                    <div class="poll-type" onclick="showPollTemplate('rating')">
+                    <div class="poll-type" onclick="scrollToSection('rating')">
                         <img src="icons/rating_icon.png" alt="Rating">
                         <span>Rating</span>
                     </div>
-                    <div class="poll-type" onclick="showPollTemplate('open_text')">
+                    <div class="poll-type" onclick="scrollToSection('open_text')">
                         <img src="icons/open_text_icon.png" alt="Open Text">
                         <span>Open Text</span>
                     </div>
-                    <div class="poll-type" onclick="showPollTemplate('ranking')">
+                    <div class="poll-type" onclick="scrollToSection('ranking')">
                         <img src="icons/ranking_icon.png" alt="Ranking">
                         <span>Ranking</span>
                     </div>
@@ -305,8 +265,8 @@ if ($pollsResult === false) {
     </div>
 
     <script>
-        // Function to load poll template based on selection
-        function showPollTemplate(type) {
+        // Function to load poll template based on selection and scroll down
+        function scrollToSection(type) {
             const pollTemplate = document.getElementById('poll-template');
             let templateHTML = '';
 
@@ -337,11 +297,98 @@ if ($pollsResult === false) {
                         <button type="submit" name="submit_poll" class="btn btn-primary">Create Poll</button>
                     </form>
                 `;
-            } 
-            // Add other templates for word cloud, quiz, rating, etc.
-            // ...
+            } else if (type === 'word_cloud') {
+                templateHTML = `
+                    <h4>Create Word Cloud Poll</h4>
+                    <form method="POST" action="">
+                        <div class="mb-3">
+                            <label for="poll_question" class="form-label">Poll Question:</label>
+                            <input type="text" class="form-control" id="poll_question" name="poll_question" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="word_limit" class="form-label">Word Limit:</label>
+                            <input type="number" class="form-control" id="word_limit" name="word_limit" required>
+                        </div>
+                        <button type="submit" name="submit_poll" class="btn btn-primary">Create Poll</button>
+                    </form>
+                `;
+            } else if (type === 'quiz') {
+                templateHTML = `
+                    <h4>Create Quiz</h4>
+                    <form method="POST" action="">
+                        <div class="mb-3">
+                            <label for="quiz_question" class="form-label">Quiz Question:</label>
+                            <input type="text" class="form-control" id="quiz_question" name="quiz_question" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="correct_answer" class="form-label">Correct Answer:</label>
+                            <input type="text" class="form-control" id="correct_answer" name="correct_answer" required>
+                        </div>
+                        <button type="submit" name="submit_poll" class="btn btn-primary">Create Quiz</button>
+                    </form>
+                `;
+            } else if (type === 'rating') {
+                templateHTML = `
+                    <h4>Create Rating Poll</h4>
+                    <form method="POST" action="">
+                        <div class="mb-3">
+                            <label for="poll_question" class="form-label">Poll Question:</label>
+                            <input type="text" class="form-control" id="poll_question" name="poll_question" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="max_rating" class="form-label">Max Rating:</label>
+                            <input type="number" class="form-control" id="max_rating" name="max_rating" required>
+                        </div>
+                        <button type="submit" name="submit_poll" class="btn btn-primary">Create Rating Poll</button>
+                    </form>
+                `;
+            } else if (type === 'open_text') {
+                templateHTML = `
+                    <h4>Create Open Text Poll</h4>
+                    <form method="POST" action="">
+                        <div class="mb-3">
+                            <label for="poll_question" class="form-label">Poll Question:</label>
+                            <input type="text" class="form-control" id="poll_question" name="poll_question" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="character_limit" class="form-label">Character Limit:</label>
+                            <input type="number" class="form-control" id="character_limit" name="character_limit" required>
+                        </div>
+                        <button type="submit" name="submit_poll" class="btn btn-primary">Create Open Text Poll</button>
+                    </form>
+                `;
+            } else if (type === 'ranking') {
+                templateHTML = `
+                    <h4>Create Ranking Poll</h4>
+                    <form method="POST" action="">
+                        <div class="mb-3">
+                            <label for="poll_question" class="form-label">Poll Question:</label>
+                            <input type="text" class="form-control" id="poll_question" name="poll_question" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="option1" class="form-label">Option 1:</label>
+                            <input type="text" class="form-control" id="option1" name="options[]" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="option2" class="form-label">Option 2:</label>
+                            <input type="text" class="form-control" id="option2" name="options[]" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="option3" class="form-label">Option 3 (Optional):</label>
+                            <input type="text" class="form-control" id="option3" name="options[]">
+                        </div>
+                        <div class="mb-3">
+                            <label for="option4" class="form-label">Option 4 (Optional):</label>
+                            <input type="text" class="form-control" id="option4" name="options[]">
+                        </div>
+                        <button type="submit" name="submit_poll" class="btn btn-primary">Create Ranking Poll</button>
+                    </form>
+                `;
+            }
 
+            // Load the template and scroll down to it
             pollTemplate.innerHTML = templateHTML;
+            pollTemplate.scrollIntoView({ behavior: 'smooth' });
         }
     </script>
 
