@@ -104,8 +104,6 @@ if ($pollsResult === false) {
     <title>Poll Management</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* Styling for the sidebar and content */
-        /* Sidebar and content layout styling */
         .sidebar {
             width: 250px;
             background-color: #0d1b2a;
@@ -153,14 +151,41 @@ if ($pollsResult === false) {
             margin-bottom: 15px;
         }
 
-        /* Profile Picture */
-        .profile-pic {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 50%;
-            border: 2px solid #ddd;
+        /* Add styles for the poll types section */
+        .poll-types {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
         }
+
+        .poll-type {
+            width: 150px;
+            height: 150px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            cursor: pointer;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+        }
+
+        .poll-type:hover {
+            background-color: #e0e0e0;
+        }
+
+        .poll-type img {
+            width: 50px;
+            height: 50px;
+        }
+
+        .poll-type span {
+            margin-top: 10px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
     </style>
 </head>
 <body>
@@ -193,68 +218,37 @@ if ($pollsResult === false) {
             <!-- Create New Poll Section -->
             <div class="section">
                 <h3>Create a New Poll</h3>
-                <form method="POST" action="">
 
-                    <!-- Poll Start and End Date Section -->
-                    <div class="mb-3">
-                        <label for="start_date" class="form-label">Start Date:</label>
-                        <input type="date" class="form-control" id="start_date" name="start_date" required>
+                <div class="poll-types">
+                    <div class="poll-type" onclick="showPollTemplate('mcq')">
+                        <img src="icons/mcq_icon.png" alt="Multiple Choice">
+                        <span>Multiple Choice</span>
                     </div>
+                    <div class="poll-type" onclick="showPollTemplate('word_cloud')">
+                        <img src="icons/word_cloud_icon.png" alt="Word Cloud">
+                        <span>Word Cloud</span>
+                    </div>
+                    <div class="poll-type" onclick="showPollTemplate('quiz')">
+                        <img src="icons/quiz_icon.png" alt="Quiz">
+                        <span>Quiz</span>
+                    </div>
+                    <div class="poll-type" onclick="showPollTemplate('rating')">
+                        <img src="icons/rating_icon.png" alt="Rating">
+                        <span>Rating</span>
+                    </div>
+                    <div class="poll-type" onclick="showPollTemplate('open_text')">
+                        <img src="icons/open_text_icon.png" alt="Open Text">
+                        <span>Open Text</span>
+                    </div>
+                    <div class="poll-type" onclick="showPollTemplate('ranking')">
+                        <img src="icons/ranking_icon.png" alt="Ranking">
+                        <span>Ranking</span>
+                    </div>
+                </div>
 
-                    <div class="mb-3">
-                        <label for="end_date" class="form-label">End Date:</label>
-                        <input type="date" class="form-control" id="end_date" name="end_date" required>
-                    </div>
+                <!-- Template will appear here based on selection -->
+                <div id="poll-template" class="section mt-4"></div>
 
-                    <!-- Category Selection -->
-                    <div class="mb-3">
-                        <label for="category" class="form-label">Category:</label>
-                        <select class="form-control" id="category" name="category" required>
-                            <option value="Sports">Sports</option>
-                            <option value="Politics">Politics</option>
-                            <option value="Entertainment">Entertainment</option>
-                            <option value="Technology">Technology</option>
-                            <option value="Custom">Custom Category</option>
-                        </select>
-                    </div>
-
-                    <!-- Poll Question -->
-                    <div class="mb-3">
-                        <label for="poll_question" class="form-label">Poll Question:</label>
-                        <input type="text" class="form-control" id="poll_question" name="poll_question" required>
-                    </div>
-
-                    <!-- Poll Type -->
-                    <div class="mb-3">
-                        <label for="poll_type" class="form-label">Poll Type:</label>
-                        <select class="form-control" id="poll_type" name="poll_type" required>
-                            <option value="mcq">MCQ (Multiple Choice)</option>
-                            <option value="checklist">Checklist</option>
-                            <option value="yes_no">Yes/No</option>
-                            <option value="rating">Rating</option>
-                        </select>
-                    </div>
-
-                    <!-- Poll Options -->
-                    <div class="mb-3">
-                        <label for="option1" class="form-label">Option 1:</label>
-                        <input type="text" class="form-control" id="option1" name="options[]" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="option2" class="form-label">Option 2:</label>
-                        <input type="text" class="form-control" id="option2" name="options[]" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="option3" class="form-label">Option 3 (Optional):</label>
-                        <input type="text" class="form-control" id="option3" name="options[]">
-                    </div>
-                    <div class="mb-3">
-                        <label for="option4" class="form-label">Option 4 (Optional):</label>
-                        <input type="text" class="form-control" id="option4" name="options[]">
-                    </div>
-
-                    <button type="submit" name="submit_poll" class="btn btn-primary">Create Poll</button>
-                </form>
             </div>
         <?php else: ?>
             <!-- Verification Form for Non-Verified Users -->
@@ -309,6 +303,47 @@ if ($pollsResult === false) {
             <?php endif; ?>
         </div>
     </div>
+
+    <script>
+        // Function to load poll template based on selection
+        function showPollTemplate(type) {
+            const pollTemplate = document.getElementById('poll-template');
+            let templateHTML = '';
+
+            if (type === 'mcq') {
+                templateHTML = `
+                    <h4>Create Multiple Choice Poll</h4>
+                    <form method="POST" action="">
+                        <div class="mb-3">
+                            <label for="poll_question" class="form-label">Poll Question:</label>
+                            <input type="text" class="form-control" id="poll_question" name="poll_question" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="option1" class="form-label">Option 1:</label>
+                            <input type="text" class="form-control" id="option1" name="options[]" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="option2" class="form-label">Option 2:</label>
+                            <input type="text" class="form-control" id="option2" name="options[]" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="option3" class="form-label">Option 3 (Optional):</label>
+                            <input type="text" class="form-control" id="option3" name="options[]">
+                        </div>
+                        <div class="mb-3">
+                            <label for="option4" class="form-label">Option 4 (Optional):</label>
+                            <input type="text" class="form-control" id="option4" name="options[]">
+                        </div>
+                        <button type="submit" name="submit_poll" class="btn btn-primary">Create Poll</button>
+                    </form>
+                `;
+            } 
+            // Add other templates for word cloud, quiz, rating, etc.
+            // ...
+
+            pollTemplate.innerHTML = templateHTML;
+        }
+    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
