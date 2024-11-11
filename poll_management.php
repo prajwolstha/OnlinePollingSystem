@@ -32,8 +32,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_poll'])) {
     // Check if question and options are provided
     if (!empty($poll_question) && count($options) > 1) {
         // SQL Insert Query
-        $sql = "INSERT INTO polls (question, category, start_date, end_date)
-                VALUES ('$poll_question', '$category', '$start_date', '$end_date')";
+        $sql = "INSERT INTO polls (question, category, start_date, end_date, user_id)
+                VALUES ('$poll_question', '$category', '$start_date', '$end_date', '$user_id')";
 
         if ($conn->query($sql) === TRUE) {
             $poll_id = $conn->insert_id; // Get the poll ID for inserting options
@@ -52,14 +52,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_poll'])) {
     }
 }
 
-
-
-
-
+// Fetch active polls created by the user
+$pollsSql = "SELECT * FROM polls WHERE user_id='$user_id' AND end_date >= CURDATE()";
+$pollsResult = $conn->query($pollsSql);
+if ($pollsResult === false) {
+    die("Error fetching polls: " . $conn->error); // Display SQL error if the query fails
+}
 ?>
-
-<!-- Rest of your HTML code here -->
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -182,8 +181,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_poll'])) {
             </div>
         <?php endif; ?>
 
-        <!-- View Your Polls Section -->
-        <div class="section">
+       <!-- View Your Polls Section -->
+       <div class="section">
             <h3>Your Active Polls</h3>
             <?php if ($pollsResult && $pollsResult->num_rows > 0): ?>
                 <table class="table">

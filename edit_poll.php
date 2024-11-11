@@ -28,8 +28,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $conn->query($sql);
         }
 
-        echo "<div class='alert alert-success'>Poll updated successfully!</div>";
-    } else {
+        header("Location: index.php");
+        exit();
+        } else {
         echo "<div class='alert alert-danger'>Please provide a question and at least two options.</div>";
     }
 }

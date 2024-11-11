@@ -161,6 +161,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile_pic']))
         </div>
     <?php endif; ?>
 
+
     <?php include 'sidebar.php'; ?>
 
     <!-- Content Section -->

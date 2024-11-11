@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 03, 2024 at 08:15 AM
+-- Generation Time: Nov 11, 2024 at 03:36 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -53,6 +53,14 @@ CREATE TABLE `notifications` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `notifications`
+--
+
+INSERT INTO `notifications` (`id`, `message`, `is_read`, `created_at`) VALUES
+(1, 'New verification document submitted by user ID: 16', 1, '2024-11-11 12:02:07'),
+(2, 'New verification document submitted by user ID: 16', 1, '2024-11-11 12:02:39');
+
 -- --------------------------------------------------------
 
 --
@@ -62,22 +70,21 @@ CREATE TABLE `notifications` (
 CREATE TABLE `polls` (
   `id` int(11) NOT NULL,
   `question` varchar(255) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `category` varchar(255) DEFAULT NULL,
+  `poll_type` varchar(50) DEFAULT NULL,
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
+  `user_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `polls`
 --
 
-INSERT INTO `polls` (`id`, `question`, `created_at`) VALUES
-(1, 'what is your name', '2024-10-03 05:49:12'),
-(2, 'what is your father name?', '2024-10-03 05:49:56'),
-(3, 'what is your father name?', '2024-10-03 05:50:04'),
-(4, 'what is your father name?', '2024-10-03 05:52:43'),
-(5, 'abcd', '2024-10-03 05:53:07'),
-(6, 'hello  its me', '2024-10-03 06:08:52'),
-(7, 'hello  its me', '2024-10-03 06:09:11'),
-(8, 'how are you?', '2024-10-03 06:10:59');
+INSERT INTO `polls` (`id`, `question`, `created_at`, `category`, `poll_type`, `start_date`, `end_date`, `user_id`) VALUES
+(23, 'who lets the dog out?', '2024-11-11 13:50:00', 'Entertainment', NULL, '2024-11-12', '2024-11-21', 16),
+(24, 'K CHA KHABAR?', '2024-11-11 14:15:36', 'Entertainment', NULL, '2024-11-18', '2024-11-28', 12);
 
 -- --------------------------------------------------------
 
@@ -97,38 +104,14 @@ CREATE TABLE `poll_options` (
 --
 
 INSERT INTO `poll_options` (`id`, `poll_id`, `option_text`, `votes`) VALUES
-(1, 1, 'prajwol', 3),
-(2, 1, 'suyog', 0),
-(3, 1, 'rozan', 0),
-(4, 1, 'ramu', 1),
-(5, 2, 'ggg', 0),
-(6, 2, 'fff', 0),
-(7, 2, 'dddd', 0),
-(8, 2, 'aaaa', 0),
-(9, 3, 'ggg', 0),
-(10, 3, 'fff', 0),
-(11, 3, 'dddd', 0),
-(12, 3, 'aaaa', 0),
-(13, 4, 'ggg', 0),
-(14, 4, 'fff', 0),
-(15, 4, 'dddd', 0),
-(16, 4, 'aaaa', 0),
-(17, 5, 'aa', 1),
-(18, 5, 'vv', 0),
-(19, 5, 'cc', 0),
-(20, 5, 'dd', 0),
-(21, 6, 'adele', 0),
-(22, 6, 'taylor', 0),
-(23, 6, 'ed sheeran', 0),
-(24, 6, 'eminem', 1),
-(25, 7, 'adele', 0),
-(26, 7, 'taylor', 0),
-(27, 7, 'ed sheeran', 0),
-(28, 7, 'eminem', 0),
-(29, 8, 'good', 0),
-(30, 8, 'not good', 0),
-(31, 8, 'bad', 0),
-(32, 8, 'angry', 0);
+(112, 23, 'amir khan', 0),
+(113, 23, 'rr', 0),
+(114, 23, 'tt', 0),
+(115, 23, 'yy', 0),
+(116, 24, 'THIK CHA', 0),
+(117, 24, 'ALL GOOD', 0),
+(118, 24, 'NOT GOOD', 0),
+(119, 24, 'HAWA', 0);
 
 -- --------------------------------------------------------
 
@@ -144,23 +127,25 @@ CREATE TABLE `prayojan` (
   `password` varchar(50) NOT NULL,
   `country` varchar(255) NOT NULL,
   `address` varchar(255) NOT NULL,
-  `verified` tinyint(1) DEFAULT 0
+  `verified` tinyint(1) DEFAULT 0,
+  `profile_pic` varchar(255) DEFAULT 'uploads/default_profile.png'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `prayojan`
 --
 
-INSERT INTO `prayojan` (`id`, `name`, `phone`, `email`, `password`, `country`, `address`, `verified`) VALUES
-(1, 'Prajwol Shrestha', 2147483647, 'prajwol@gmail.com', '$2y$10$1/c4CYrlCAq0kCjYnCUXUONUZpFoiA2H0nKIQJxkw2m', 'Nepal', 'Budhanilkantha - 10, Kathmandu', 0),
-(2, 'aaa', 2147483647, 'aaa@admin.com', '$2y$10$0njV12.SN3JkHkhkhHnxouQ4XA.du.CPOIhFJ7PQzvK', 'Nepal', 'Budhanilkantha - 10, Kathmandu', 0),
-(3, 'PRANJU SHRESTHA', 2147483647, 'pranju@admin.com', '$2y$10$abERYmZGDo8On4I8rTkVUegWZJOZYoxdky3tRPS9o2O', 'Nepal', 'Budhanilkantha - 10, Kathmandu', 0),
-(4, 'sss', 2147483647, 'sss@gmail.com', 'sss', 'Nepal', 'Budhanilkantha - 10, Kathmandu', 0),
-(5, '', 2147483647, '', '', 'Nepal', 'Budhanilkantha - 10, Kathmandu', 0),
-(8, 'admin admin', 987654321, 'admin@a.com', '21232f297a57a5a743894a0e4a801fc3', 'adminland', 'adminland', 1),
-(9, 'abc', 987654321, 'abc@abc.com', '900150983cd24fb0d6963f7d28e17f72', 'adminland', 'adminland', 1),
-(10, 'SUYOG KADARIYA', 2147483647, '7suyog@gmail.com', '5c9e01573cef0ba08498875b98b02029', 'Nepal', 'Budhanilkantha - 10, Kathmandu', 1),
-(11, 'prajwoldon', 2147483647, 'prajwol123@gamil.com', 'f0a72478bf1066fec30d729f0c547c4f', 'Nepal', 'Budhanilkantha - 10, Kathmandu', 1);
+INSERT INTO `prayojan` (`id`, `name`, `phone`, `email`, `password`, `country`, `address`, `verified`, `profile_pic`) VALUES
+(8, 'admin', 987654321, 'admin@a.com', '21232f297a57a5a743894a0e4a801fc3', 'adminland', 'adminland', 1, 'uploads/image.png'),
+(9, 'abc', 987654321, 'abc@abc.com', '900150983cd24fb0d6963f7d28e17f72', 'adminland', 'adminland', 1, 'uploads/heroimg.jpg'),
+(10, 'SUYOG KADARIYA', 2147483647, '7suyog@gmail.com', '5c9e01573cef0ba08498875b98b02029', 'Nepal', 'Budhanilkantha - 10, Kathmandu', 1, 'uploads/pizza-pizza-filled-with-tomatoes-salami-olives.jpg'),
+(11, 'prajwoldon', 2147483647, 'prajwol123@gamil.com', 'f0a72478bf1066fec30d729f0c547c4f', 'Nepal', 'Budhanilkantha - 10, Kathmandu', 1, 'uploads/default_profile.png'),
+(12, 'Rojan Thami', 2147483647, 'rojan@gmail.com', '0ed8d98967c0cb60a39fd225803e0dfb', 'Nepal', 'Budhanilkantha - 10, Kathmandu', 1, 'uploads/Prajwol Shrestha (1).jpg'),
+(13, 'PRANJU SHRESTHA', 2147483647, 'pranju@gmail.com', '75097016e0e2cda52eb4535a4b5ac7ff', 'Nepal', 'Budhanilkantha - 10, Kathmandu', 0, 'uploads/activity.png'),
+(14, 'ram thapa', 2147483647, 'ramthapa@gmail.com', '4641999a7679fcaef2df0e26d11e3c72', 'Nepal', 'ramuland', 0, 'uploads/Screenshot 2024-09-04 165855.png'),
+(15, 'sir', 2147483647, 'sir@gmail.com', 'dcff57c9a964f83fbf81cc75ec2e413a', 'Nepal', 'Budhanilkantha - 10, Kathmandu', 0, 'uploads/logo.jpg'),
+(16, 'samosa', 777777777, 'samosa@gmail.com', 'b0c39b2b615a250c8ebf9a4a0d323686', 'japan', 'jjjjjjjjjjjj', 1, 'uploads/Prajwol Shrestha.jpg'),
+(17, 'pratix', 0, 'pratik@gmail.com', '0cb2b62754dfd12b6ed0161d4b447df7', 'nepal', 'fdsafdsafdsaf', 1, 'uploads/default_profile.png');
 
 -- --------------------------------------------------------
 
@@ -186,7 +171,34 @@ INSERT INTO `verification_documents` (`id`, `user_id`, `document`, `status`, `ph
 (3, 10, 'uploads/heroimg.jpg', 'approved', 'uploads/heroimg.jpg'),
 (4, 10, 'uploads/heroimg.jpg', 'rejected', 'uploads/heroimg.jpg'),
 (5, 11, 'uploads/Screenshot 2024-08-27 235130.png', 'approved', 'uploads/Screenshot 2024-10-03 111333.png'),
-(6, 11, 'uploads/Screenshot 2024-08-27 235130.png', 'rejected', 'uploads/Screenshot 2024-10-03 111333.png');
+(6, 11, 'uploads/Screenshot 2024-08-27 235130.png', 'rejected', 'uploads/Screenshot 2024-10-03 111333.png'),
+(7, 10, 'uploads/verification_docs/verified.png', 'rejected', 'uploads/verification_docs/Approval.png'),
+(8, 12, 'uploads/verification_docs/LUCK.jpg', 'approved', 'uploads/verification_docs/Prajwol Shrestha.jpg'),
+(9, 12, 'uploads/verification_docs/LUCK.jpg', 'rejected', 'uploads/verification_docs/Prajwol Shrestha.jpg'),
+(10, 16, 'uploads/biriyani.jpg', 'approved', 'uploads/biriyani.jpg'),
+(11, 16, 'uploads/biriyani.jpg', 'approved', 'uploads/biriyani.jpg');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `votes`
+--
+
+CREATE TABLE `votes` (
+  `id` int(11) NOT NULL,
+  `poll_id` int(11) NOT NULL,
+  `option_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `votes`
+--
+
+INSERT INTO `votes` (`id`, `poll_id`, `option_id`, `user_id`, `created_at`) VALUES
+(11, 23, 112, 0, '2024-11-11 13:55:58'),
+(12, 24, 116, 0, '2024-11-11 14:17:25');
 
 --
 -- Indexes for dumped tables
@@ -231,6 +243,14 @@ ALTER TABLE `verification_documents`
   ADD KEY `user_id` (`user_id`);
 
 --
+-- Indexes for table `votes`
+--
+ALTER TABLE `votes`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `poll_id` (`poll_id`),
+  ADD KEY `option_id` (`option_id`);
+
+--
 -- AUTO_INCREMENT for dumped tables
 --
 
@@ -244,31 +264,37 @@ ALTER TABLE `admin_users`
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `polls`
 --
 ALTER TABLE `polls`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `poll_options`
 --
 ALTER TABLE `poll_options`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=120;
 
 --
 -- AUTO_INCREMENT for table `prayojan`
 --
 ALTER TABLE `prayojan`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `verification_documents`
 --
 ALTER TABLE `verification_documents`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+
+--
+-- AUTO_INCREMENT for table `votes`
+--
+ALTER TABLE `votes`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- Constraints for dumped tables
@@ -285,6 +311,13 @@ ALTER TABLE `poll_options`
 --
 ALTER TABLE `verification_documents`
   ADD CONSTRAINT `verification_documents_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `prayojan` (`id`);
+
+--
+-- Constraints for table `votes`
+--
+ALTER TABLE `votes`
+  ADD CONSTRAINT `votes_ibfk_1` FOREIGN KEY (`poll_id`) REFERENCES `polls` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `votes_ibfk_2` FOREIGN KEY (`option_id`) REFERENCES `poll_options` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
