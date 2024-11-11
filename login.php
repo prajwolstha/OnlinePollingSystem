@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($password == $user['password']) { // Direct comparison
             session_start();
             $_SESSION['email'] = $email;
-            header('Location: welcome.php');
+            header('Location: index.php');
         } else {
             echo "<div class='alert alert-danger'>Invalid password.</div>";
         }

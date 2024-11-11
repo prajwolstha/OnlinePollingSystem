@@ -1,7 +1,18 @@
 <?php
 session_start();
 
+// Redirect to login page if user is not logged in
+if (!isset($_SESSION['email'])) {
+    header("Location: login.php");
+    exit();
+}
+
 $conn = new mysqli('localhost', 'root', '', 'poll');
+
+// Check for connection errors
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
 
 // Fetch user details
 $email = $_SESSION['email'];
@@ -56,16 +67,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['change_password'])) {
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile_pic'])) {
     // Handle profile picture upload
     if (!empty($_FILES['profile_pic']['name'])) {
-        $profilePicPath = 'uploads/' . basename($_FILES['profile_pic']['name']);
-        if (move_uploaded_file($_FILES['profile_pic']['tmp_name'], $profilePicPath)) {
-            $sql = "UPDATE prayojan SET profile_pic='$profilePicPath' WHERE email='$email'";
-            if ($conn->query($sql) === TRUE) {
-                $error_message = "Profile picture updated successfully!";
+        $fileType = strtolower(pathinfo($_FILES['profile_pic']['name'], PATHINFO_EXTENSION));
+        $allowedTypes = ['jpg', 'jpeg', 'png'];
+
+        if (in_array($fileType, $allowedTypes)) {
+            $profilePicPath = 'uploads/' . basename($_FILES['profile_pic']['name']);
+            if (move_uploaded_file($_FILES['profile_pic']['tmp_name'], $profilePicPath)) {
+                $sql = "UPDATE prayojan SET profile_pic='$profilePicPath' WHERE email='$email'";
+                if ($conn->query($sql) === TRUE) {
+                    $error_message = "Profile picture updated successfully!";
+                } else {
+                    $error_message = "Error updating profile picture: " . $conn->error;
+                }
             } else {
-                $error_message = "Error updating profile picture: " . $conn->error;
+                $error_message = "Failed to upload profile picture.";
             }
         } else {
-            $error_message = "Failed to upload profile picture.";
+            $error_message = "Only JPG, JPEG, and PNG formats are allowed.";
         }
     }
 }
@@ -117,49 +135,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile_pic']))
             min-height: 100vh;
         }
 
-        .sidebar {
-            width: 250px;
-            background-color: #0d1b2a; /* Dark blue color */
-            color: white;
-            padding: 20px;
-            position: fixed; /* Make sidebar fixed */
-            height: 100%;
-        }
-
         .content {
-            margin-left: 270px; /* Ensure content doesn't overlap sidebar */
+            margin-left: 270px;
             padding: 20px;
-            background-color: #f5f5f5; /* Light background color */
+            background-color: #f5f5f5;
             flex-grow: 1;
-        }
-
-        .sidebar h4 {
-            color: white;
-            margin-top: 10px;
-        }
-
-        .verified {
-            color: blue;
-            margin-left: 5px;
-        }
-
-        .menu-item {
-            color: white;
-            text-decoration: none;
-            display: block;
-            padding: 15px 0;
-            border-bottom: 1px solid #324c65;
-        }
-
-        .menu-item:hover {
-            background-color: #1a2c41;
-            cursor: pointer;
         }
 
         .section h3 {
             margin-bottom: 15px;
         }
 
+        .logout {
+            color: white;
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
@@ -171,35 +161,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile_pic']))
         </div>
     <?php endif; ?>
 
-    <!-- Sidebar Section -->
-    <div class="sidebar">
-        <div class="text-center">
-            <img src="<?php echo htmlspecialchars($profile_pic); ?>" alt="Profile Picture" class="profile-pic">
-            <h4>
-                <?php echo htmlspecialchars($user['name']); ?>
-                <?php if ($user['verified']): ?>
-                    <span class="verified"><img src="verified.png" alt="img"></span> <!-- Blue Tick for verified users -->
-                <?php endif; ?>
-            </h4>
-        </div>
-
-        <!-- Sidebar Menu -->
-        <div class="menu">
-            <a href="welcome.php" class="menu-item menu-item-active">Profile</a>
-            <a href="poll_management.php" class="menu-item">Poll Management</a>
-            <a href="poll_results.php" class="menu-item">Poll Results</a>
-            <a href="notifications.php" class="menu-item">Notifications</a>
-            <a href="user_analytics.php" class="menu-item">User Analytics</a>
-            <a href="vote.php" class="menu-item">Vote</a> <!-- New Vote section added here -->
-        </div>
-    </div>
+    <?php include 'sidebar.php'; ?>
 
     <!-- Content Section -->
     <div class="content">
+        <!-- Update Profile Picture Section -->
+        <div class="section">
+            <h3>Update Profile Picture</h3>
+            <img src="<?php echo htmlspecialchars($profile_pic); ?>" alt="Profile Picture" class="profile-pic mb-3">
+            <form method="POST" action="index.php" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <input type="file" class="form-control" name="profile_pic" required>
+                </div>
+                <button type="submit" name="update_profile_pic" class="btn btn-success">Update Profile Picture</button>
+            </form>
+        </div>
+
         <!-- User Profile Section -->
         <div class="section">
             <h3>Your Profile</h3>
-            <form method="POST" action="welcome.php">
+            <form method="POST" action="index.php">
                 <div class="mb-3">
                     <label for="name" class="form-label">Name</label>
                     <input type="text" class="form-control" id="name" name="name" value="<?php echo htmlspecialchars($user['name']); ?>" required>
@@ -215,7 +196,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile_pic']))
         <!-- Change Password Section -->
         <div class="section">
             <h3>Change Password</h3>
-            <form method="POST" action="welcome.php">
+            <form method="POST" action="index.php">
                 <div class="mb-3">
                     <label for="current_password" class="form-label">Current Password</label>
                     <input type="password" class="form-control" id="current_password" name="current_password" required>
@@ -232,17 +213,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile_pic']))
             </form>
         </div>
 
-        <!-- Update Profile Picture Section -->
-        <div class="section">
-            <h3>Update Profile Picture</h3>
-            <img src="<?php echo htmlspecialchars($profile_pic); ?>" alt="Profile Picture" class="profile-pic mb-3">
-            <form method="POST" action="welcome.php" enctype="multipart/form-data">
-                <div class="mb-3">
-                    <input type="file" class="form-control" name="profile_pic" required>
-                </div>
-                <button type="submit" name="update_profile_pic" class="btn btn-success">Update Profile Picture</button>
-            </form>
-        </div>
+        <button type="submit" name="logout" class="btn btn-danger">
+            <a href="logout.php" class="logout">Logout</a>
+        </button>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
