@@ -1,8 +1,5 @@
  <?php
-$connection=mysqli_connect('localhost', 'root', '', 'poll');
-if(!$connection){
-    die('Database connnection error');
-}
+include 'connection.php';
 $id=$_GET['id'];
 $fetchSql = "SELECT * FROM prayojan where id= $id";
 $fetchResults = mysqli_query($connection,$fetchSql);

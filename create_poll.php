@@ -1,7 +1,6 @@
 <?php
 // Database connection
-$conn = new mysqli('localhost', 'root', '', 'poll');
-
+include 'connection.php';
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Get the poll question and options from the form
     $question = $_POST['question'];

@@ -1,7 +1,6 @@
 
 <?php
-$conn = new mysqli('localhost', 'root', '', 'poll');
-
+include 'connection.php';
 $fetchSql = "SELECT * FROM prayojan";
 $fetchResults = mysqli_query($conn,$fetchSql);
 

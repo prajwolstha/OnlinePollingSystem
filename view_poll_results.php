@@ -1,8 +1,5 @@
 <?php
-session_start();
-
-$conn = new mysqli('localhost', 'root', '', 'poll');
-
+include 'connection.php';
 // Check if poll ID is provided
 if (!isset($_GET['id'])) {
     die("Error: Poll ID is missing.");

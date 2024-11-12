@@ -8,7 +8,6 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-$conn = new mysqli('localhost', 'root', '', 'poll');
 
 // Fetch user details
 $email = $_SESSION['email'] ?? '';
@@ -25,7 +24,7 @@ $profile_pic = $user['profile_pic'] ?? 'uploads/default_profile.png'; // Fallbac
         width: 250px;
         background-color: #0d1b2a; /* Dark blue color */
         color: white;
-        padding: 20px;
+        padding: 20px 0;
         position: fixed; /* Make sidebar fixed */
         height: 100%;
     }
@@ -50,7 +49,14 @@ $profile_pic = $user['profile_pic'] ?? 'uploads/default_profile.png'; // Fallbac
     .verified {
         color: blue;
         margin-left: 5px;
+        height:21px;
+        
     }
+    .verifyimg{
+        height: 21px;
+    }
+
+
 
     .menu-item {
         color: white;
@@ -73,7 +79,7 @@ $profile_pic = $user['profile_pic'] ?? 'uploads/default_profile.png'; // Fallbac
         <h4>
             <?php echo htmlspecialchars($user['name'] ?? 'Guest'); ?>
             <?php if (!empty($user['verified'])): ?>
-                <span class="verified"><img src="verified.png" alt="Verified"></span> <!-- Blue Tick for verified users -->
+                <span class="verified"><img src="verified.png" alt="Verified" class="verifyimg"></span> <!-- Blue Tick for verified users -->
             <?php endif; ?>
         </h4>
     </div>

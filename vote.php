@@ -1,13 +1,5 @@
 <?php
-session_start();
-
-$conn = new mysqli('localhost', 'root', '', 'poll');
-
-// Check for connection errors
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-
+include 'connection.php';
 // Fetch active polls
 $pollsSql = "SELECT * FROM polls WHERE end_date >= CURDATE()";
 $pollsResult = $conn->query($pollsSql);
@@ -16,16 +8,21 @@ $pollsResult = $conn->query($pollsSql);
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_vote'])) {
     $poll_id = $_POST['poll_id'];
     $selected_option = $_POST['option'];
-    $user_id = $_SESSION['id']; // Assume user_id is stored in session when logged in
+    $user_id = $_SESSION['id']; // Assuming user_id is stored in session when logged in
 
     // Check if the user has already voted in this poll
     $checkVoteSql = "SELECT * FROM votes WHERE user_id='$user_id' AND poll_id='$poll_id'";
     $voteResult = $conn->query($checkVoteSql);
 
     if ($voteResult->num_rows == 0) {
-        // Insert vote
+        // Insert vote into the `votes` table
         $insertVoteSql = "INSERT INTO votes (user_id, poll_id, option_id) VALUES ('$user_id', '$poll_id', '$selected_option')";
+        
         if ($conn->query($insertVoteSql) === TRUE) {
+            // Update the `poll_options` table to increment the vote count
+            $updateOptionSql = "UPDATE poll_options SET votes = votes + 1 WHERE id = '$selected_option'";
+            $conn->query($updateOptionSql); // Execute the update query
+
             echo "<div class='alert alert-success'>Vote submitted successfully!</div>";
         } else {
             echo "<div class='alert alert-danger'>Error submitting vote: " . $conn->error . "</div>";
@@ -35,7 +32,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_vote'])) {
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>

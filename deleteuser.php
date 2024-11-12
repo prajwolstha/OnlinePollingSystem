@@ -1,8 +1,5 @@
 <?php
-$connection=mysqli_connect('localhost', 'root', '', 'poll');
-if(!$connection){
-    die('Database connnection error');
-}
+include 'connection.php';
 
 $userId=$_GET['id'];
 

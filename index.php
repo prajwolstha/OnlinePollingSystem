@@ -1,18 +1,11 @@
-<?php
-session_start();
-
+<?php 
+include 'connection.php';
 // Redirect to login page if user is not logged in
 if (!isset($_SESSION['email'])) {
     header("Location: login.php");
     exit();
 }
 
-$conn = new mysqli('localhost', 'root', '', 'poll');
-
-// Check for connection errors
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
 
 // Fetch user details
 $email = $_SESSION['email'];
@@ -172,7 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile_pic']))
             <img src="<?php echo htmlspecialchars($profile_pic); ?>" alt="Profile Picture" class="profile-pic mb-3">
             <form method="POST" action="index.php" enctype="multipart/form-data">
                 <div class="mb-3">
-                    <input type="file" class="form-control" name="profile_pic" required>
+                    <input type="file" class="form-control" name="profile_pic" accept=".jpg, .jpeg, .png" required>
                 </div>
                 <button type="submit" name="update_profile_pic" class="btn btn-success">Update Profile Picture</button>
             </form>

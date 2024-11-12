@@ -1,7 +1,5 @@
 <?php
-// Database connection
-$conn = new mysqli('localhost', 'root', '', 'poll');
-
+include 'connection.php';
 // Fetch all polls
 $polls = $conn->query("SELECT * FROM polls");
 

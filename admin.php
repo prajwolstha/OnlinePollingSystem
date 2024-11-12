@@ -1,16 +1,9 @@
 <?php
-session_start();
-
+include 'connection.php';
 // Check if admin is logged in
 if (!isset($_SESSION['admin_logged_in'])) {
     header('Location: admin_login.php');
     exit();
-}
-
-$conn = new mysqli('localhost', 'root', '', 'poll');
-// Check for connection errors
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
 }
 
 // Fetch unread notifications (poll creation and document submission notifications)
@@ -25,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_action'])) {
     $documentId = $_POST['document_id'];
     $action = $_POST['user_action'];
     $status = ($action === 'approve') ? 'approved' : 'rejected';
-    
+
     // Update the verification status in the verification_documents table
     $sql = "UPDATE verification_documents SET status='$status' WHERE id='$documentId'";
     if ($conn->query($sql) === TRUE) {
@@ -76,7 +69,6 @@ $users = $conn->query($sql);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="bootstrap.min.css" rel="stylesheet">
 
     <style>
         .container {
@@ -108,6 +100,9 @@ $users = $conn->query($sql);
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="#notifications" role="tab" data-bs-toggle="tab">Notifications</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#viewPolls" role="tab" data-bs-toggle="tab">View Polls</a>
             </li>
         </ul>
 
@@ -163,7 +158,8 @@ $users = $conn->query($sql);
                                 <tr>
                                     <td><?php echo htmlspecialchars($row['name']); ?></td>
                                     <td><?php echo htmlspecialchars($row['email']); ?></td>
-                                    <td><a href="<?php echo htmlspecialchars($row['document']); ?>" target="_blank">View Document</a></td>
+                                    <td><a href="<?php echo htmlspecialchars($row['document']); ?>" target="_blank">View Passport</a></td>
+                                    <td><a href="<?php echo htmlspecialchars($row['photo']); ?>" target="_blank">View Photo</a></td>
                                     <td>
                                         <form method="post" action="">
                                             <input type="hidden" name="document_id" value="<?php echo $row['id']; ?>">
@@ -189,6 +185,7 @@ $users = $conn->query($sql);
                                 <th>Name</th>
                                 <th>Email</th>
                                 <th>Verified</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -197,6 +194,12 @@ $users = $conn->query($sql);
                                     <td><?php echo htmlspecialchars($user['name']); ?></td>
                                     <td><?php echo htmlspecialchars($user['email']); ?></td>
                                     <td><?php echo $user['verified'] ? 'Yes' : 'No'; ?></td>
+                                    <td>
+                                        <form method="post" action="">
+                                            <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
+                                            <button type="submit" name="delete_user" value="delete" class="btn btn-danger">Delete User</button>
+                                        </form>
+                                    </td>
                                 </tr>
                             <?php endwhile; ?>
                         </tbody>
@@ -221,9 +224,76 @@ $users = $conn->query($sql);
                     <div class="alert alert-info">No new notifications.</div>
                 <?php endif; ?>
             </div>
+
+            <!-- View Polls Tab -->
+            <div role="tabpanel" class="tab-pane" id="viewPolls">
+                <h3>View Poll Results by User</h3>
+                <form id="viewPollForm" method="POST">
+                    <div class="mb-3">
+                        <label for="userSelect" class="form-label">Select User:</label>
+                        <select id="userSelect" class="form-control" name="user_id" required>
+                            <option value="">Choose a user</option>
+                            <?php
+                            // Fetch users for the dropdown
+                            $userResult = $conn->query("SELECT id, name FROM prayojan");
+                            while ($user = $userResult->fetch_assoc()) {
+                                echo "<option value='{$user['id']}'>{$user['name']}</option>";
+                            }
+                            ?>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="pollSelect" class="form-label">Select Poll:</label>
+                        <select id="pollSelect" class="form-control" name="poll_id" required>
+                            <option value="">Select a poll</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="fetchPollResults()">View Results</button>
+                </form>
+
+                <!-- Poll Results Section -->
+                <div id="pollResults" class="mt-4"></div>
+            </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Fetch polls based on selected user
+        document.getElementById('userSelect').addEventListener('change', function () {
+            const userId = this.value;
+            const pollSelect = document.getElementById('pollSelect');
+            pollSelect.innerHTML = "<option value=''>Select a poll</option>";
+            if (userId) {
+                fetch(`fetch_polls.php?user_id=${userId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(poll => {
+                            const option = document.createElement('option');
+                            option.value = poll.id;
+                            option.textContent = poll.question;
+                            pollSelect.appendChild(option);
+                        });
+                    });
+            }
+        });
+
+        // Fetch poll results for the selected poll
+        function fetchPollResults() {
+            const pollId = document.getElementById('pollSelect').value;
+            if (pollId) {
+                fetch(`fetch_poll_results.php?poll_id=${pollId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        let resultsHtml = '<h4>Poll Results:</h4><ul class="list-group">';
+                        data.forEach(option => {
+                            resultsHtml += `<li class="list-group-item">${option.option_text}: ${option.votes} votes</li>`;
+                        });
+                        resultsHtml += '</ul>';
+                        document.getElementById('pollResults').innerHTML = resultsHtml;
+                    });
+            }
+        }
+    </script>
 </body>
 </html>

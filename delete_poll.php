@@ -1,8 +1,5 @@
 <?php
-session_start();
-
-$conn = new mysqli('localhost', 'root', '', 'poll');
-
+include 'connection.php';
 // Fetch poll ID
 $poll_id = $_GET['id'];
 

@@ -1,13 +1,11 @@
 <?php
-session_start();
-
+include 'connection.php';
 // Check if admin is already logged in
 if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true) {
     header('Location: admin.php');
     exit();
 }
 
-$conn = new mysqli('localhost', 'root', '', 'poll');
 
 // Check if form is submitted
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {

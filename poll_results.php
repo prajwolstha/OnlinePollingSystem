@@ -1,8 +1,5 @@
 <?php
-session_start();
-
-$conn = new mysqli('localhost', 'root', '', 'poll');
-
+include 'connection.php';
 // Fetch user details
 $email = $_SESSION['email'];
 $sql = "SELECT * FROM prayojan WHERE email='$email'";

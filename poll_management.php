@@ -1,12 +1,6 @@
 <?php
-session_start();
-
-$conn = new mysqli('localhost', 'root', '', 'poll');
-
+include 'connection.php';
 // Check for connection errors
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
 
 // Fetch user details
 $email = $_SESSION['email'];
@@ -21,7 +15,6 @@ $user = $result->fetch_assoc();
 $user_id = $user['id'];
 $verified = $user['verified']; // Fetch the verified status
 
-// Handle document submission for verification
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_poll'])) {
     $poll_question = $_POST['poll_question'];
     $category = $_POST['category'];
@@ -29,28 +22,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_poll'])) {
     $end_date = $_POST['end_date'];
     $options = array_filter($_POST['options']); // Filter out empty options
 
-    // Check if question and options are provided
+    // Validate inputs
     if (!empty($poll_question) && count($options) > 1) {
-        // SQL Insert Query
+        // Insert the poll
         $sql = "INSERT INTO polls (question, category, start_date, end_date, user_id)
                 VALUES ('$poll_question', '$category', '$start_date', '$end_date', '$user_id')";
 
         if ($conn->query($sql) === TRUE) {
-            $poll_id = $conn->insert_id; // Get the poll ID for inserting options
+            $poll_id = $conn->insert_id; // Get the last inserted poll ID
 
-            foreach ($options as $option) {
-                $sql = "INSERT INTO poll_options (poll_id, option_text) VALUES ('$poll_id', '$option')";
-                $conn->query($sql);
+            // Insert each option into poll_options table
+            foreach ($options as $option_text) {
+                $option_sql = "INSERT INTO poll_options (poll_id, option_text) VALUES ('$poll_id', '$option_text')";
+                $conn->query($option_sql);
             }
 
             echo "<div class='alert alert-success'>Poll created successfully!</div>";
         } else {
-            echo "<div class='alert alert-danger'>Error: " . $conn->error . "</div>";
+            echo "<div class='alert alert-danger'>Error creating poll: " . $conn->error . "</div>";
         }
     } else {
         echo "<div class='alert alert-danger'>Please provide a question and at least two options.</div>";
     }
 }
+
+
 
 // Fetch active polls created by the user
 $pollsSql = "SELECT * FROM polls WHERE user_id='$user_id' AND end_date >= CURDATE()";

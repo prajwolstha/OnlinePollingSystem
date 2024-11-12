@@ -1,13 +1,11 @@
 <?php
-session_start();
-
+include 'connection.php';
 // Check if admin is logged in (add admin authentication logic here)
 if (!isset($_SESSION['admin_logged_in'])) {
     header('Location: admin_login.php');
     exit();
 }
 
-$conn = new mysqli('localhost', 'root', '', 'poll');
 
 // Approve or reject user verification
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {

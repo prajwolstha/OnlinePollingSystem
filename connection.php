@@ -1,9 +1,15 @@
 <?php
 session_start();
+// Database credentials
+$host = 'localhost';
+$username = 'root';
+$password = '';
+$database = 'dstudios_poll';
 
-$conn = new mysqli('localhost', 'root', '', 'poll');
+// Create connection
+$conn = new mysqli($host, $username, $password, $database);
 
-// Check for connection errors
+// Check connection
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
