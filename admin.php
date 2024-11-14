@@ -6,6 +6,17 @@ if (!isset($_SESSION['admin_logged_in'])) {
     exit();
 }
 
+// Fetch pending verifications
+$sql = "SELECT vd.*, p.name, p.email 
+        FROM verification_documents vd 
+        JOIN prayojan p ON vd.user_id = p.id 
+        WHERE vd.status='pending'";
+$pendingVerifications = $conn->query($sql);
+
+if (!$pendingVerifications) {
+    echo "Error fetching pending verifications: " . $conn->error;
+}
+
 // Fetch unread notifications (poll creation and document submission notifications)
 $notificationSql = "SELECT * FROM notifications WHERE is_read = FALSE";
 $notifications = $conn->query($notificationSql);
@@ -46,12 +57,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['poll_action'])) {
     }
 }
 
-// Fetch pending verifications
-$sql = "SELECT vd.*, p.name, p.email 
-        FROM verification_documents vd 
-        JOIN prayojan p ON vd.user_id = p.id 
-        WHERE vd.status='pending'";
-$pendingVerifications = $conn->query($sql);
+// Delete a user
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['delete_user'])) {
+    $userId = $_POST['user_id'];
+    $sql = "DELETE FROM prayojan WHERE id='$userId'";
+    if ($conn->query($sql) === TRUE) {
+        echo "<div class='alert alert-success'>User deleted successfully.</div>";
+    } else {
+        echo "<div class='alert alert-danger'>Error deleting user: " . $conn->error . "</div>";
+    }
+}
 
 // Fetch all polls
 $sql = "SELECT * FROM polls";
@@ -81,8 +96,25 @@ $users = $conn->query($sql);
             border-radius: 5px;
             margin-bottom: 20px;
         }
-        .nav-tabs {
-            margin-bottom: 20px;
+        .poll-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .poll-item {
+            width: 100px;
+            height: 100px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        #pollResults {
+            margin-top: 20px;
         }
     </style>
 </head>
@@ -139,7 +171,7 @@ $users = $conn->query($sql);
             </div>
 
             <!-- User Management Tab -->
-            <div role="tabpanel" class="tab-pane" id="users">
+            <div role="tabpanel" class="tab-pane fade" id="users">
                 <h3>Manage Users</h3>
                 <!-- Pending Verifications Section -->
                 <?php if ($pendingVerifications->num_rows > 0): ?>
@@ -210,7 +242,7 @@ $users = $conn->query($sql);
             </div>
 
             <!-- Notifications Tab -->
-            <div role="tabpanel" class="tab-pane" id="notifications">
+            <div role="tabpanel" class="tab-pane fade" id="notifications">
                 <h3>Notifications</h3>
                 <?php if ($notifications->num_rows > 0): ?>
                     <div class="notifications">
@@ -226,7 +258,7 @@ $users = $conn->query($sql);
             </div>
 
             <!-- View Polls Tab -->
-            <div role="tabpanel" class="tab-pane" id="viewPolls">
+            <div role="tabpanel" class="tab-pane fade" id="viewPolls">
                 <h3>View Poll Results by User</h3>
                 <form id="viewPollForm" method="POST">
                     <div class="mb-3">
@@ -242,14 +274,10 @@ $users = $conn->query($sql);
                             ?>
                         </select>
                     </div>
-                    <div class="mb-3">
-                        <label for="pollSelect" class="form-label">Select Poll:</label>
-                        <select id="pollSelect" class="form-control" name="poll_id" required>
-                            <option value="">Select a poll</option>
-                        </select>
-                    </div>
-                    <button type="button" class="btn btn-primary" onclick="fetchPollResults()">View Results</button>
                 </form>
+
+                <!-- Display Polls Created by the Selected User -->
+                <div id="pollList" class="poll-grid"></div>
 
                 <!-- Poll Results Section -->
                 <div id="pollResults" class="mt-4"></div>
@@ -262,25 +290,25 @@ $users = $conn->query($sql);
         // Fetch polls based on selected user
         document.getElementById('userSelect').addEventListener('change', function () {
             const userId = this.value;
-            const pollSelect = document.getElementById('pollSelect');
-            pollSelect.innerHTML = "<option value=''>Select a poll</option>";
+            const pollList = document.getElementById('pollList');
+            pollList.innerHTML = '';
             if (userId) {
                 fetch(`fetch_polls.php?user_id=${userId}`)
                     .then(response => response.json())
                     .then(data => {
                         data.forEach(poll => {
-                            const option = document.createElement('option');
-                            option.value = poll.id;
-                            option.textContent = poll.question;
-                            pollSelect.appendChild(option);
+                            const pollItem = document.createElement('div');
+                            pollItem.classList.add('poll-item');
+                            pollItem.textContent = poll.question;
+                            pollItem.onclick = () => fetchPollResults(poll.id);
+                            pollList.appendChild(pollItem);
                         });
                     });
             }
         });
 
         // Fetch poll results for the selected poll
-        function fetchPollResults() {
-            const pollId = document.getElementById('pollSelect').value;
+        function fetchPollResults(pollId) {
             if (pollId) {
                 fetch(`fetch_poll_results.php?poll_id=${pollId}`)
                     .then(response => response.json())

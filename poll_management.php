@@ -54,6 +54,44 @@ $pollsResult = $conn->query($pollsSql);
 if ($pollsResult === false) {
     die("Error fetching polls: " . $conn->error); // Display SQL error if the query fails
 }
+
+// Check for document submission
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_verification'])) {
+    // Define the upload directory
+    $uploadDir = 'uploads/';
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0777, true); // Create directory if not exists
+    }
+
+    // Process uploaded files
+    $passportDoc = $_FILES['passport_doc'];
+    $passportPhoto = $_FILES['passport_photo'];
+
+    // Generate unique names for the uploaded files
+    $passportDocPath = $uploadDir . uniqid() . '_' . basename($passportDoc['name']);
+    $passportPhotoPath = $uploadDir . uniqid() . '_' . basename($passportPhoto['name']);
+
+    // Move the files to the server directory
+    if (move_uploaded_file($passportDoc['tmp_name'], $passportDocPath) && move_uploaded_file($passportPhoto['tmp_name'], $passportPhotoPath)) {
+        // Insert verification document details into the database
+        $status = 'pending';
+        $sql = "INSERT INTO verification_documents (user_id, document, photo, status) VALUES ('$user_id', '$passportDocPath', '$passportPhotoPath', '$status')";
+
+        if ($conn->query($sql) === TRUE) {
+            // Create a notification for the admin
+            $notificationMessage = "New document submission for verification from user ID: $user_id";
+            $conn->query("INSERT INTO notifications (message, is_read) VALUES ('$notificationMessage', FALSE)");
+
+            echo "<div class='alert alert-success'>Documents submitted successfully. Please wait for admin verification.</div>";
+        } else {
+            echo "<div class='alert alert-danger'>Error saving document information: " . $conn->error . "</div>";
+        }
+    } else {
+        echo "<div class='alert alert-danger'>Error uploading files. Please try again.</div>";
+    }
+}
+
+
 ?>
 
 <!DOCTYPE html>
