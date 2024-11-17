@@ -17,8 +17,15 @@ if (!$pendingVerifications) {
     echo "Error fetching pending verifications: " . $conn->error;
 }
 
-// Fetch unread notifications (poll creation and document submission notifications)
-$notificationSql = "SELECT * FROM notifications WHERE is_read = FALSE";
+// Fetch detailed notifications for reported polls
+$notificationSql = "
+    SELECT notifications.message, notifications.created_at, 
+           polls.question AS poll_question, prayojan.name AS reporter_name 
+    FROM notifications
+    LEFT JOIN polls ON polls.id = notifications.poll_id
+    LEFT JOIN prayojan ON prayojan.id = notifications.user_id
+    WHERE notifications.is_read = FALSE
+";
 $notifications = $conn->query($notificationSql);
 
 // Mark all notifications as read when the page is loaded
@@ -30,11 +37,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['user_action'])) {
     $action = $_POST['user_action'];
     $status = ($action === 'approve') ? 'approved' : 'rejected';
 
-    // Update the verification status in the verification_documents table
     $sql = "UPDATE verification_documents SET status='$status' WHERE id='$documentId'";
     if ($conn->query($sql) === TRUE) {
         if ($status === 'approved') {
-            // Update user verification status
             $userId = $_POST['user_id'];
             $conn->query("UPDATE prayojan SET verified=TRUE WHERE id='$userId'");
         }
@@ -84,38 +89,12 @@ $users = $conn->query($sql);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
     <style>
-        .container {
-            margin-top: 20px;
-        }
-        .notifications {
-            background-color: #f8f9fa;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            margin-bottom: 20px;
-        }
-        .poll-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        .poll-item {
-            width: 100px;
-            height: 100px;
-            background-color: #f0f0f0;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        #pollResults {
-            margin-top: 20px;
-        }
+        .container { margin-top: 20px; }
+        .notifications { background-color: #f8f9fa; padding: 10px; border: 1px solid #ccc; border-radius: 5px; margin-bottom: 20px; }
+        .poll-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+        .poll-item { width: 100px; height: 100px; background-color: #f0f0f0; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; }
+        #pollResults { margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -173,17 +152,11 @@ $users = $conn->query($sql);
             <!-- User Management Tab -->
             <div role="tabpanel" class="tab-pane fade" id="users">
                 <h3>Manage Users</h3>
-                <!-- Pending Verifications Section -->
-                <?php if ($pendingVerifications->num_rows > 0): ?>
-                    <h4>Pending Verifications</h4>
+                <h4>Pending Verifications</h4>
+                <?php if ($pendingVerifications && $pendingVerifications->num_rows > 0): ?>
                     <table class="table table-bordered mt-3">
                         <thead>
-                            <tr>
-                                <th>User Name</th>
-                                <th>Email</th>
-                                <th>Document</th>
-                                <th>Action</th>
-                            </tr>
+                            <tr><th>User Name</th><th>Email</th><th>Document</th><th>Action</th></tr>
                         </thead>
                         <tbody>
                             <?php while ($row = $pendingVerifications->fetch_assoc()): ?>
@@ -208,17 +181,11 @@ $users = $conn->query($sql);
                     <div class="alert alert-info">No pending verifications.</div>
                 <?php endif; ?>
 
-                <!-- All Users Section -->
                 <h4>All Users</h4>
                 <?php if ($users->num_rows > 0): ?>
                     <table class="table table-bordered mt-3">
                         <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Verified</th>
-                                <th>Action</th>
-                            </tr>
+                            <tr><th>Name</th><th>Email</th><th>Verified</th><th>Action</th></tr>
                         </thead>
                         <tbody>
                             <?php while ($user = $users->fetch_assoc()): ?>
@@ -244,14 +211,18 @@ $users = $conn->query($sql);
             <!-- Notifications Tab -->
             <div role="tabpanel" class="tab-pane fade" id="notifications">
                 <h3>Notifications</h3>
-                <?php if ($notifications->num_rows > 0): ?>
-                    <div class="notifications">
-                        <ul>
-                            <?php while ($notification = $notifications->fetch_assoc()): ?>
-                                <li><?php echo htmlspecialchars($notification['message']); ?> (<?php echo date('Y-m-d H:i:s', strtotime($notification['created_at'])); ?>)</li>
-                            <?php endwhile; ?>
-                        </ul>
-                    </div>
+                <?php if ($notifications && $notifications->num_rows > 0): ?>
+                    <ul>
+                        <?php while ($notification = $notifications->fetch_assoc()): ?>
+                            <li>
+                                <strong>Report Details:</strong><br>
+                                <strong>Poll Question:</strong> <?php echo isset($notification['poll_question']) ? htmlspecialchars($notification['poll_question']) : 'N/A'; ?><br>
+                                <strong>Reported by:</strong> <?php echo isset($notification['reporter_name']) ? htmlspecialchars($notification['reporter_name']) : 'Anonymous'; ?><br>
+                                <strong>Message:</strong> <?php echo htmlspecialchars($notification['message']); ?><br>
+                                <small><em><?php echo date('Y-m-d H:i:s', strtotime($notification['created_at'])); ?></em></small>
+                            </li>
+                        <?php endwhile; ?>
+                    </ul>
                 <?php else: ?>
                     <div class="alert alert-info">No new notifications.</div>
                 <?php endif; ?>
@@ -266,7 +237,6 @@ $users = $conn->query($sql);
                         <select id="userSelect" class="form-control" name="user_id" required>
                             <option value="">Choose a user</option>
                             <?php
-                            // Fetch users for the dropdown
                             $userResult = $conn->query("SELECT id, name FROM prayojan");
                             while ($user = $userResult->fetch_assoc()) {
                                 echo "<option value='{$user['id']}'>{$user['name']}</option>";
@@ -276,10 +246,7 @@ $users = $conn->query($sql);
                     </div>
                 </form>
 
-                <!-- Display Polls Created by the Selected User -->
                 <div id="pollList" class="poll-grid"></div>
-
-                <!-- Poll Results Section -->
                 <div id="pollResults" class="mt-4"></div>
             </div>
         </div>
@@ -287,7 +254,6 @@ $users = $conn->query($sql);
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Fetch polls based on selected user
         document.getElementById('userSelect').addEventListener('change', function () {
             const userId = this.value;
             const pollList = document.getElementById('pollList');
@@ -307,7 +273,6 @@ $users = $conn->query($sql);
             }
         });
 
-        // Fetch poll results for the selected poll
         function fetchPollResults(pollId) {
             if (pollId) {
                 fetch(`fetch_poll_results.php?poll_id=${pollId}`)

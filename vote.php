@@ -31,6 +31,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_vote'])) {
         echo "<div class='alert alert-warning'>You have already voted in this poll.</div>";
     }
 }
+
+// Handle report submission
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['report_poll'])) {
+    $poll_id = $_POST['poll_id'];
+    $user_id = $_SESSION['id']; // Assuming user_id is stored in session when logged in
+
+    // Insert report into the `notifications` table for admin to review
+    $reportSql = "INSERT INTO notifications (poll_id, user_id, message, is_read) VALUES ('$poll_id', '$user_id', 'User reported poll ID $poll_id.', FALSE)";
+    
+    if ($conn->query($reportSql) === TRUE) {
+        echo "<div class='alert alert-success'>Report submitted successfully!</div>";
+    } else {
+        echo "<div class='alert alert-danger'>Error submitting report: " . $conn->error . "</div>";
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -44,14 +59,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_vote'])) {
             margin-left: 270px;
             padding: 20px;
         }
-
-        /* Custom styling for new UI */
         .poll-container {
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
         }
-
         .poll-card {
             width: calc(50% - 10px);
             background-color: #f9f9f9;
@@ -60,41 +72,35 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_vote'])) {
             padding: 20px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             position: relative;
-            min-height: 250px; /* Adjusted height to fit more options */
+            min-height: 300px;
         }
-
         .poll-card h5 {
             font-size: 1.25rem;
             font-weight: bold;
             color: #333;
             margin-bottom: 15px;
         }
-
         .poll-creator {
             font-size: 0.9rem;
             color: #888;
             margin-bottom: 10px;
         }
-
         .form-check {
             margin-bottom: 10px;
         }
-
         .btn-submit {
             background-color: #0B1042;
             color: #fff;
             border: none;
             padding: 5px 15px;
             font-weight: bold;
+            margin-right: 10px;
             transition: background-color 0.3s ease;
-            margin-right: 10px; /* Adjusted spacing */
         }
-
         .btn-submit:hover {
             background-color: #1a237e;
         }
-
-        .btn-clear {
+        .btn-clear, .btn-report {
             color: #6c757d;
             background: transparent;
             border: none;
@@ -102,13 +108,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_vote'])) {
             cursor: pointer;
             font-size: 0.9rem;
         }
-
-        .btn-clear:hover {
+        .btn-clear:hover, .btn-report:hover {
             color: #333;
-        }
-
-        .alert {
-            margin-bottom: 20px;
         }
     </style>
 </head>
@@ -144,6 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_vote'])) {
                                 <button type="submit" name="submit_vote" class="btn btn-submit">Submit</button>
                                 <button type="button" class="btn-clear" onclick="clearSelection(<?php echo $poll['id']; ?>)">Clear</button>
                             </div>
+                            <button type="button" class="btn-report mt-2" onclick="reportPoll(<?php echo $poll['id']; ?>)">Report</button>
                         </form>
                     </div>
                 <?php endwhile; ?>
@@ -163,6 +165,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_vote'])) {
                     radio.checked = false;
                 }
             });
+        }
+
+        // Function to confirm and submit a report
+        function reportPoll(pollId) {
+            const confirmReport = confirm("Do you want to report this poll?");
+            if (confirmReport) {
+                const form = document.createElement("form");
+                form.method = "POST";
+                form.action = "vote.php";
+
+                const inputPollId = document.createElement("input");
+                inputPollId.type = "hidden";
+                inputPollId.name = "poll_id";
+                inputPollId.value = pollId;
+
+                const inputReport = document.createElement("input");
+                inputReport.type = "hidden";
+                inputReport.name = "report_poll";
+                inputReport.value = true;
+
+                form.appendChild(inputPollId);
+                form.appendChild(inputReport);
+                document.body.appendChild(form);
+                form.submit();
+            }
         }
     </script>
 </body>
