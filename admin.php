@@ -20,13 +20,20 @@ if (!$pendingVerifications) {
 // Fetch detailed notifications for reported polls
 $notificationSql = "
     SELECT notifications.message, notifications.created_at, 
-           polls.question AS poll_question, prayojan.name AS reporter_name 
+           polls.question AS poll_question, 
+           reporter.name AS reporter_name, 
+           creator.name AS creator_name, 
+           creator.id AS creator_id
     FROM notifications
     LEFT JOIN polls ON polls.id = notifications.poll_id
-    LEFT JOIN prayojan ON prayojan.id = notifications.user_id
+    LEFT JOIN prayojan AS reporter ON reporter.id = notifications.user_id
+    LEFT JOIN prayojan AS creator ON creator.id = polls.user_id
     WHERE notifications.is_read = FALSE
 ";
 $notifications = $conn->query($notificationSql);
+$conn->query("UPDATE notifications SET is_read = TRUE WHERE is_read = FALSE");
+
+
 
 // Mark all notifications as read when the page is loaded
 $conn->query("UPDATE notifications SET is_read = TRUE WHERE is_read = FALSE");
@@ -151,7 +158,6 @@ $users = $conn->query($sql);
 
             <!-- User Management Tab -->
             <div role="tabpanel" class="tab-pane fade" id="users">
-                <h3>Manage Users</h3>
                 <h4>Pending Verifications</h4>
                 <?php if ($pendingVerifications && $pendingVerifications->num_rows > 0): ?>
                     <table class="table table-bordered mt-3">
@@ -208,25 +214,56 @@ $users = $conn->query($sql);
                 <?php endif; ?>
             </div>
 
-            <!-- Notifications Tab -->
-            <div role="tabpanel" class="tab-pane fade" id="notifications">
-                <h3>Notifications</h3>
-                <?php if ($notifications && $notifications->num_rows > 0): ?>
-                    <ul>
-                        <?php while ($notification = $notifications->fetch_assoc()): ?>
-                            <li>
-                                <strong>Report Details:</strong><br>
-                                <strong>Poll Question:</strong> <?php echo isset($notification['poll_question']) ? htmlspecialchars($notification['poll_question']) : 'N/A'; ?><br>
-                                <strong>Reported by:</strong> <?php echo isset($notification['reporter_name']) ? htmlspecialchars($notification['reporter_name']) : 'Anonymous'; ?><br>
-                                <strong>Message:</strong> <?php echo htmlspecialchars($notification['message']); ?><br>
-                                <small><em><?php echo date('Y-m-d H:i:s', strtotime($notification['created_at'])); ?></em></small>
-                            </li>
-                        <?php endwhile; ?>
-                    </ul>
-                <?php else: ?>
-                    <div class="alert alert-info">No new notifications.</div>
-                <?php endif; ?>
-            </div>
+
+
+     <!-- Notifications Tab -->
+     <!-- Notifications Tab -->
+<div role="tabpanel" class="tab-pane active" id="notifications">
+    <h3>Notifications</h3>
+    <?php if ($notifications && $notifications->num_rows > 0): ?>
+        <ul>
+            <?php while ($notification = $notifications->fetch_assoc()): ?>
+                <li>
+                    <strong>Report Details:</strong><br>
+                    <strong>Poll Question:</strong> 
+                    <?php echo isset($notification['poll_question']) ? htmlspecialchars($notification['poll_question']) : 'N/A'; ?><br>
+                    <strong>Created by:</strong> 
+                    <?php echo isset($notification['creator_name']) ? htmlspecialchars($notification['creator_name']) : 'N/A'; ?><br>
+                    <strong>Reported by:</strong> 
+                    <?php echo isset($notification['reporter_name']) ? htmlspecialchars($notification['reporter_name']) : 'Anonymous'; ?><br>
+                    <strong>Message:</strong> 
+                    <?php echo htmlspecialchars($notification['message']); ?><br>
+                    <small><em><?php echo date('Y-m-d H:i:s', strtotime($notification['created_at'])); ?></em></small>
+                    <form method="POST" action="" class="mt-2">
+                        <input type="hidden" name="user_id" value="<?php echo $notification['creator_id']; ?>">
+                        <textarea name="admin_message" class="form-control mb-2" placeholder="Enter your message to the user" required></textarea>
+                        <button type="submit" name="alert_user" class="btn btn-warning">Alert User</button>
+                    </form>
+                </li>
+            <?php endwhile; ?>
+        </ul>
+    <?php else: ?>
+        <div class="alert alert-info">No new notifications.</div>
+    <?php endif; ?>
+</div>
+<?php
+// Handle alert submission
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['alert_user'])) {
+    $userId = $_POST['user_id'];
+    $adminMessage = $conn->real_escape_string($_POST['admin_message']);
+
+    // Insert the alert into notifications table for the user
+    $sql = "INSERT INTO user_notifications (user_id, message, created_at) VALUES ('$userId', '$adminMessage', NOW())";
+    if ($conn->query($sql) === TRUE) {
+        echo "<div class='alert alert-success'>Message sent to the user successfully!</div>";
+    } else {
+        echo "<div class='alert alert-danger'>Error sending message: " . $conn->error . "</div>";
+    }
+}
+?>
+
+
+
 
             <!-- View Polls Tab -->
             <div role="tabpanel" class="tab-pane fade" id="viewPolls">

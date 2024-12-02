@@ -11,7 +11,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_vote'])) {
     $user_id = $_SESSION['id']; // Assuming user_id is stored in session when logged in
 
     // Check if the user has already voted in this poll
-    $checkVoteSql = "SELECT * FROM votes WHERE user_id='$user_id' AND poll_id='$poll_id'";
+    $checkVoteSql = "SELECT * FROM votes WHERE
+user_id='$user_id' AND poll_id='$poll_id'";
     $voteResult = $conn->query($checkVoteSql);
 
     if ($voteResult->num_rows == 0) {
@@ -21,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_vote'])) {
         if ($conn->query($insertVoteSql) === TRUE) {
             // Update the `poll_options` table to increment the vote count
             $updateOptionSql = "UPDATE poll_options SET votes = votes + 1 WHERE id = '$selected_option'";
-            $conn->query($updateOptionSql); // Execute the update query
+            $conn->query($updateOptionSql);
 
             echo "<div class='alert alert-success'>Vote submitted successfully!</div>";
         } else {
@@ -100,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['report_poll'])) {
         .btn-submit:hover {
             background-color: #1a237e;
         }
-        .btn-clear, .btn-report {
+        .btn-clear {
             color: #6c757d;
             background: transparent;
             border: none;
@@ -108,8 +109,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['report_poll'])) {
             cursor: pointer;
             font-size: 0.9rem;
         }
-        .btn-clear:hover, .btn-report:hover {
+        .btn-clear:hover {
             color: #333;
+        }
+        .report-icon {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+        }
+        .report-icon img {
+            width: 25px;
+            height: 25px;
+        }
+        .report-icon img:hover {
+            filter: brightness(1.2);
         }
     </style>
 </head>
@@ -125,6 +139,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['report_poll'])) {
             <div class="poll-container">
                 <?php while ($poll = $pollsResult->fetch_assoc()): ?>
                     <div class="poll-card">
+                        <div class="report-icon" onclick="reportPoll(<?php echo $poll['id']; ?>)" title="Report Poll">
+                            <img src="report.png" alt="Report">
+                        </div>
                         <div class="poll-creator">Created by: <?php echo htmlspecialchars($poll['creator_name']); ?></div>
                         <h5><?php echo htmlspecialchars($poll['question']); ?></h5>
                         <?php
@@ -145,7 +162,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['report_poll'])) {
                                 <button type="submit" name="submit_vote" class="btn btn-submit">Submit</button>
                                 <button type="button" class="btn-clear" onclick="clearSelection(<?php echo $poll['id']; ?>)">Clear</button>
                             </div>
-                            <button type="button" class="btn-report mt-2" onclick="reportPoll(<?php echo $poll['id']; ?>)">Report</button>
                         </form>
                     </div>
                 <?php endwhile; ?>
@@ -194,3 +210,4 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['report_poll'])) {
     </script>
 </body>
 </html>
+

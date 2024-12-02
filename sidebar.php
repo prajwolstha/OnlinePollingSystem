@@ -89,7 +89,7 @@ $profile_pic = $user['profile_pic'] ?? 'uploads/default_profile.png'; // Fallbac
         <a href="index.php" class="menu-item menu-item-active">Profile</a>
         <a href="poll_management.php" class="menu-item">Poll Management</a>
         <a href="poll_results.php" class="menu-item">Poll Results</a>
-        <a href="notifications.php" class="menu-item">Notifications</a>
+        <a href="usernotification.php" class="menu-item">Notifications</a>
         <a href="user_analytics.php" class="menu-item">User Analytics</a>
         <a href="vote.php" class="menu-item">Vote</a> <!-- New Vote section added here -->
     </div>
