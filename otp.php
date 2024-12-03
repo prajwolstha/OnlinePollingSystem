@@ -3,11 +3,12 @@ $email = $_POST['email'];
 $otp = $_POST['otp'];
 
 $to = $email;
-$from = "noreply@inviktacodersclub.tech";
-$fromName = "invikta Coders";
+$from = "noreply@invitkacodersclub.tech";
+$fromName = "Invitka Coders";
 $subject = "OTP Authentication";
 $message = "Your OTP is: " . $otp;
-$header = "From: " . $fromName . '<' . $from . '>';
+$header = 'From: ' . $fromName . ' <' . $from . '>';
+
 if (mail($to, $subject, $message, $header)) {
     $msg = "Successful";
 }
