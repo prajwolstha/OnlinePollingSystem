@@ -11,20 +11,18 @@ session_start();
 function sendOTP($email, $otp) {
     $mail = new PHPMailer(true); // Enable exceptions
     try {
-        //Server settings
+        // Server settings
         $mail->isSMTP();
         $mail->Host = 'smtp.gmail.com'; // Specify main and backup SMTP servers
         $mail->SMTPAuth = true; // Enable SMTP authentication
         $mail->Username = 'prazolstha12345@gmail.com'; // SMTP username
         $mail->Password = 'rlxv vxfq tttk spyh'; // SMTP password
-        $mail->SMTPSecure = 'tls'; // Enable TLS encryption, ssl also accepted
+        $mail->SMTPSecure = 'tls'; // Enable TLS encryption
         $mail->Port = 587; // TCP port to connect to
 
-        //Recipients
-
+        // Recipients
         $mail->setFrom('noreply@gmail.com', 'Online Polling System');
         $mail->addAddress($email); // Recipient email address
-
 
         // Content
         $mail->isHTML(true); // Set email format to HTML
@@ -99,18 +97,18 @@ function sendOTP($email, $otp) {
         </html>";
         $mail->AltBody = 'Your OTP for registration is: ' . $otp;
 
-        
-
         $mail->send();
         echo "<script>alert('OTP sent to $email');</script>";
     } catch (Exception $e) {
-        echo 'Message could not be sent. Mailer Error: ', $mail->ErrorInfo;
+        echo "<script>alert('Error: Could not send OTP.');</script>";
     }
 }
 
+$registrationMessage = '';
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['request_otp'])) {
-        $email = $_POST['email']; // Assuming there's an email field in your form
+        $email = $_POST['email'];
         $otp = rand(100000, 999999); // Generate OTP
         $_SESSION['otp'] = $otp;
         $_SESSION['email'] = $email;
@@ -125,16 +123,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $address = $_POST['address'];
             $email = $_SESSION['email']; // Use the email stored in session
 
-            $sql = "INSERT INTO prayojan (password, name, phone, country, address, email) 
-                    VALUES ('$password', '$name', '$phone', '$country', '$address', '$email')";
+            // Database connection
+            $conn = new mysqli('localhost', 'root', '', 'dstudios_poll');
 
-            if ($conn->query($sql) === TRUE) {
-                header('location:login.php');
+            // Check connection
+            if ($conn->connect_error) {
+                $registrationMessage = 'Database connection failed: ' . $conn->connect_error;
             } else {
-                echo "Error: " . $conn->error;  // Corrected the syntax here
+                $sql = "INSERT INTO prayojan (password, name, phone, country, address, email) 
+                        VALUES ('$password', '$name', '$phone', '$country', '$address', '$email')";
+
+                if ($conn->query($sql) === TRUE) {
+                    $registrationMessage = 'Registration successful! You can now login.';
+                } else {
+                    $registrationMessage = 'Error during registration: ' . $conn->error;
+                }
+                $conn->close();
             }
         } else {
-            echo "Incorrect OTP!";
+            $registrationMessage = 'Incorrect OTP! Please try again.';
         }
     }
 }
@@ -183,6 +190,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     </div>
                     <div class="d-flex align-items-center register-section px-5 ms-xl-4 mt-5 pt-5 pt-xl-0 mt-xl-n5">
                         <form style="width: 23rem;" method="post" action="" onsubmit="return submitForm();">
+                            <?php if (!empty($registrationMessage)): ?>
+                                <div class="alert alert-info"><?php echo $registrationMessage; ?></div>
+                            <?php endif; ?>
                             <div class="row row-spacing">
                                 <div class="col-md-6"><div class="form-outline"><input type="text" id="name" name="name" class="form-control form-control-lg" required /><label class="form-label" for="name">Name</label></div></div>
                                 <div class="col-md-6"><div class="form-outline"><input type="tel" id="phone" name="phone" class="form-control form-control-lg" required /><label class="form-label" for="phone">Phone</label></div></div>
@@ -195,7 +205,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             <button type="button" class="btn btn-info btn-block mb-2" onclick="requestOTP()">Request OTP</button>
                             <div class="form-outline row-spacing"><input type="text" id="otp" name="otp" class="form-control form-control-lg" required /><label class="form-label" for="otp">Enter OTP</label></div>
                             <div class="form-outline row-spacing"><input type="password" id="password" name="password" class="form-control form-control-lg" required /><label class="form-label" for="password">Password</label></div>
-                            <div class="pt-1 mb-4"><button type="submit" class="btn btn-primary btn-lg btn-block">Register</button></div>
+                            <div class="pt-1 mb-4"><button type="submit" class="btn btn-primary btn-lg btn-block" name="verify_otp">Register</button></div>
                             <div class="text-center"><p>Already have an account?<a href="login.php"> Login here.</a></p></div>
                         </form>
                     </div>
@@ -216,7 +226,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 xhr.open('POST', '', true);
                 xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
                 xhr.onload = function() {
-                    // Process the response here
                     alert('OTP sent to your email');
                 };
                 xhr.send('email=' + email + '&request_otp=1');
