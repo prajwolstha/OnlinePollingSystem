@@ -91,9 +91,9 @@ while ($row = $timeline_data->fetch_assoc()) {
             margin-bottom: 10px;
         }
         .progress {
-            height: 25px;
+            height: 32px;
             background-color: #e9ecef;
-            border-radius: 15px;
+            border-radius: 10px;
         }
         .progress-bar {
             background-color: #36A2EB;
@@ -117,6 +117,11 @@ while ($row = $timeline_data->fetch_assoc()) {
             margin-right: 10px;
             padding: 8px;
             width: 250px;
+        }
+        .option-details {
+            font-size: 14px;
+            margin-top: -5px;
+            margin-bottom: 10px;
         }
     </style>
 </head>
@@ -168,6 +173,9 @@ while ($row = $timeline_data->fetch_assoc()) {
                     <?php while ($option = $options->fetch_assoc()): ?>
                         <?php $percentage = $total_votes > 0 ? round(($option['votes'] / $total_votes) * 100, 2) : 0; ?>
                         <div class="mb-3">
+                            <div class="option-details">
+                                Option: <?php echo htmlspecialchars($option['option_text']); ?> (<?php echo $option['votes']; ?> votes)
+                            </div>
                             <div class="progress">
                                 <div class="progress-bar" style="width: <?php echo $percentage; ?>%;"><?php echo $percentage; ?>%</div>
                             </div>
