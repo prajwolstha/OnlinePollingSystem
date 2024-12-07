@@ -15,6 +15,7 @@ $user = $result->fetch_assoc();
 $user_id = $user['id'];
 $verified = $user['verified']; // Fetch the verified status
 
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_poll'])) {
     $poll_question = $_POST['poll_question'];
     $category = $_POST['category'];
@@ -22,29 +23,48 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_poll'])) {
     $end_date = $_POST['end_date'];
     $options = array_filter($_POST['options']); // Filter out empty options
 
+    // Generate a unique link for the poll
+    $unique_link = uniqid('poll_', true); // Generates a unique identifier for the poll
+
     // Validate inputs
     if (!empty($poll_question) && count($options) > 1) {
-        // Insert the poll
-        $sql = "INSERT INTO polls (question, category, start_date, end_date, user_id)
-                VALUES ('$poll_question', '$category', '$start_date', '$end_date', '$user_id')";
+        
+        $user_id = $_SESSION['id']; // Get the logged-in user's ID from the session
+
+        // Insert the poll into the database
+        $sql = "INSERT INTO polls (question, category, start_date, end_date, user_id, unique_link)
+                VALUES ('$poll_question', '$category', '$start_date', '$end_date', '$user_id', '$unique_link')";
 
         if ($conn->query($sql) === TRUE) {
             $poll_id = $conn->insert_id; // Get the last inserted poll ID
 
-            // Insert each option into poll_options table
+            // Insert each option into the poll_options table
             foreach ($options as $option_text) {
                 $option_sql = "INSERT INTO poll_options (poll_id, option_text) VALUES ('$poll_id', '$option_text')";
                 $conn->query($option_sql);
             }
 
-            echo "<div class='alert alert-success'>Poll created successfully!</div>";
+            // echo "<div class='alert alert-success'>Poll created successfully! Your unique poll link is: <a href='view_poll.php?link=$unique_link'>Click here</a></div>";
         } else {
-            echo "<div class='alert alert-danger'>Error creating poll: " . $conn->error . "</div>";
+            echo "<div class='alert alert-danger'>Error: " . $conn->error . "</div>";
         }
     } else {
-        echo "<div class='alert alert-danger'>Please provide a question and at least two options.</div>";
+        echo "<div class='alert alert-danger'>Please provide a poll question and at least two options.</div>";
     }
 }
+
+
+            // Display the generated poll link
+    //         $poll_link = "http://localhost/onlinepollingsystem/view_poll.php?link=$unique_link";
+    //         echo "<div class='alert alert-success'>Poll created successfully! Share this link: <a href='$poll_link' target='_blank'>$poll_link</a></div>";
+    //     } else {
+    //         echo "<div class='alert alert-danger'>Error creating poll: " . $conn->error . "</div>";
+    //     }
+    // } else {
+    //     echo "<div class='alert alert-danger'>Please provide a question and at least two options.</div>";
+    //}
+//}
+
 
 
 
@@ -93,6 +113,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_verification'])
 
 
 ?>
+
+
+
 
 <!DOCTYPE html>
 <html lang="en">

@@ -8,23 +8,24 @@ require 'PHPMailer/src/SMTP.php';
 
 session_start();
 
+// Database connection
+$conn = new mysqli('localhost', 'root', '', 'dstudios_poll');
+
+// Function to send OTP
 function sendOTP($email, $otp) {
-    $mail = new PHPMailer(true); // Enable exceptions
+    $mail = new PHPMailer(true);
     try {
-        // Server settings
         $mail->isSMTP();
-        $mail->Host = 'smtp.gmail.com'; // Specify main and backup SMTP servers
-        $mail->SMTPAuth = true; // Enable SMTP authentication
-        $mail->Username = 'prazolstha12345@gmail.com'; // SMTP username
-        $mail->Password = 'rlxv vxfq tttk spyh'; // SMTP password
-        $mail->SMTPSecure = 'tls'; // Enable TLS encryption
-        $mail->Port = 587; // TCP port to connect to
+        $mail->Host = 'smtp.gmail.com';
+        $mail->SMTPAuth = true;
+        $mail->Username = 'prazolstha12345@gmail.com';
+        $mail->Password = 'rlxv vxfq tttk spyh';
+        $mail->SMTPSecure = 'tls';
+        $mail->Port = 587;
 
-        // Recipients
         $mail->setFrom('noreply@gmail.com', 'Online Polling System');
-        $mail->addAddress($email); // Recipient email address
+        $mail->addAddress($email);
 
-        // Content
         $mail->isHTML(true); // Set email format to HTML
         $mail->Subject = 'OTP Verification';
         $mail->Body = "
@@ -109,36 +110,47 @@ $registrationMessage = '';
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['request_otp'])) {
         $email = $_POST['email'];
-        $otp = rand(100000, 999999); // Generate OTP
-        $_SESSION['otp'] = $otp;
-        $_SESSION['email'] = $email;
-        sendOTP($email, $otp);
+
+        // Check if email already exists
+        $checkEmailSql = "SELECT * FROM prayojan WHERE email = ?";
+        $stmt = $conn->prepare($checkEmailSql);
+        $stmt->bind_param('s', $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $registrationMessage = 'This email is already registered.';
+        } else {
+            $otp = rand(100000, 999999);
+            $_SESSION['otp'] = $otp;
+            $_SESSION['email'] = $email;
+            sendOTP($email, $otp);
+            $registrationMessage = 'OTP sent to your email.';
+        }
     } elseif (isset($_POST['verify_otp'])) {
         $user_otp = $_POST['otp'];
         if ($user_otp == $_SESSION['otp']) {
-            $password = md5($_POST['password']);
-            $name = $_POST['name'];
-            $phone = $_POST['phone'];
-            $country = $_POST['country'];
-            $address = $_POST['address'];
-            $email = $_SESSION['email']; // Use the email stored in session
-
-            // Database connection
-            $conn = new mysqli('localhost', 'root', '', 'dstudios_poll');
-
-            // Check connection
-            if ($conn->connect_error) {
-                $registrationMessage = 'Database connection failed: ' . $conn->connect_error;
+            if ($_POST['password'] !== $_POST['confirm_password']) {
+                $registrationMessage = 'Passwords do not match.';
             } else {
-                $sql = "INSERT INTO prayojan (password, name, phone, country, address, email) 
-                        VALUES ('$password', '$name', '$phone', '$country', '$address', '$email')";
+                $password = md5($_POST['password']);
+                $name = $_POST['name'];
+                $phone = $_POST['phone'];
+                $country = $_POST['country'];
+                $address = $_POST['address'];
+                $email = $_SESSION['email'];
 
-                if ($conn->query($sql) === TRUE) {
-                    $registrationMessage = 'Registration successful! You can now login.';
+                $sql = "INSERT INTO prayojan (password, name, phone, country, address, email) 
+                        VALUES (?, ?, ?, ?, ?, ?)";
+                $stmt = $conn->prepare($sql);
+                $stmt->bind_param('ssssss', $password, $name, $phone, $country, $address, $email);
+
+                if ($stmt->execute()) {
+                    header('location:login.php');
+                    exit;
                 } else {
-                    $registrationMessage = 'Error during registration: ' . $conn->error;
+                    $registrationMessage = 'Error during registration: ' . $stmt->error;
                 }
-                $conn->close();
             }
         } else {
             $registrationMessage = 'Incorrect OTP! Please try again.';
@@ -201,10 +213,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 <div class="col-md-6"><div class="form-outline"><input type="text" id="country" name="country" class="form-control form-control-lg" required /><label class="form-label" for="country">Country</label></div></div>
                                 <div class="col-md-6"><div class="form-outline"><input type="text" id="address" name="address" class="form-control form-control-lg" required /><label class="form-label" for="address">Address</label></div></div>
                             </div>
-                            <div class="form-outline row-spacing"><input type="email" id="email" name="email" class="form-control form-control-lg" required /><label class="form-label" for="email">Email</label></div>
+                            <div class="form-outline row-spacing">
+                                <input type="email" id="email" name="email" class="form-control form-control-lg" required />
+                                <label class="form-label" for="email">Email</label>
+                                <div id="emailError" style="color: red; font-size: 0.9rem;"></div>
+                            </div>
                             <button type="button" class="btn btn-info btn-block mb-2" onclick="requestOTP()">Request OTP</button>
                             <div class="form-outline row-spacing"><input type="text" id="otp" name="otp" class="form-control form-control-lg" required /><label class="form-label" for="otp">Enter OTP</label></div>
                             <div class="form-outline row-spacing"><input type="password" id="password" name="password" class="form-control form-control-lg" required /><label class="form-label" for="password">Password</label></div>
+                            <div class="form-outline row-spacing"><input type="password" id="confirm_password" name="confirm_password" class="form-control form-control-lg" required /><label class="form-label" for="confirm_password">Confirm Password</label></div>
                             <div class="pt-1 mb-4"><button type="submit" class="btn btn-primary btn-lg btn-block" name="verify_otp">Register</button></div>
                             <div class="text-center"><p>Already have an account?<a href="login.php"> Login here.</a></p></div>
                         </form>
@@ -218,19 +235,40 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     </section>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.3.0/mdb.min.js"></script>
     <script>
+        document.getElementById('email').addEventListener('blur', function () {
+            const email = this.value;
+            const emailError = document.getElementById('emailError');
+
+            if (email) {
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', 'check_email.php', true);
+                xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+                xhr.onload = function () {
+                    if (this.responseText === 'exists') {
+                        emailError.textContent = 'This email is already registered.';
+                    } else {
+                        emailError.textContent = '';
+                    }
+                };
+                xhr.send('email=' + email);
+            }
+        });
+
         function requestOTP() {
             const email = document.getElementById('email').value;
-            if(email) {
-                // Send an AJAX request to send the OTP
+            const emailError = document.getElementById('emailError');
+
+            if (emailError.textContent === '') {
+                // Proceed only if no email error
                 const xhr = new XMLHttpRequest();
                 xhr.open('POST', '', true);
                 xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-                xhr.onload = function() {
+                xhr.onload = function () {
                     alert('OTP sent to your email');
                 };
                 xhr.send('email=' + email + '&request_otp=1');
             } else {
-                alert('Please enter an email address.');
+                alert('Please fix the email issue first.');
             }
         }
 

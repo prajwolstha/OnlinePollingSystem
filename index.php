@@ -1,10 +1,10 @@
 <?php 
 include 'connection.php';
 // Redirect to login page if user is not logged in
-if (!isset($_SESSION['email'])) {
-    header("Location: login.php");
-    exit();
-}
+// if (!isset($_SESSION['email'])) {
+//     header("Location: login.php");
+//     exit();
+// }
 
 
 // Fetch user details

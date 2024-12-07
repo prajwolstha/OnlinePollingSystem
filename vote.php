@@ -1,29 +1,47 @@
 <?php
 include 'connection.php';
+
+if (!isset($_SESSION['id'])) {
+    echo "You must log in to vote.";
+    exit;
+}
+
 // Fetch active polls with creator names
-$pollsSql = "SELECT polls.*, prayojan.name as creator_name FROM polls JOIN prayojan ON polls.user_id = prayojan.id WHERE end_date >= CURDATE()";
+$pollsSql = "SELECT polls.*, prayojan.name as creator_name 
+             FROM polls 
+             JOIN prayojan ON polls.user_id = prayojan.id 
+             WHERE end_date >= CURDATE()";
 $pollsResult = $conn->query($pollsSql);
 
 // Handle vote submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_vote'])) {
     $poll_id = $_POST['poll_id'];
     $selected_option = $_POST['option'];
-    $user_id = $_SESSION['id']; // Assuming user_id is stored in session when logged in
+    $user_id = $_SESSION['id'];
+
+    // Check if the user is the creator of the poll
+    $pollCreatorSql = "SELECT user_id FROM polls WHERE id='$poll_id'";
+    $creatorResult = $conn->query($pollCreatorSql);
+
+    if ($creatorResult->num_rows > 0) {
+        $poll = $creatorResult->fetch_assoc();
+        if ($poll['user_id'] == $user_id) {
+            echo "<script>alert('You cannot vote since you created this poll.');</script>";
+            echo "<script>window.history.back();</script>";
+            exit;
+        }
+    }
 
     // Check if the user has already voted in this poll
-    $checkVoteSql = "SELECT * FROM votes WHERE
-user_id='$user_id' AND poll_id='$poll_id'";
+    $checkVoteSql = "SELECT * FROM votes WHERE user_id='$user_id' AND poll_id='$poll_id'";
     $voteResult = $conn->query($checkVoteSql);
 
     if ($voteResult->num_rows == 0) {
-        // Insert vote into the `votes` table
         $insertVoteSql = "INSERT INTO votes (user_id, poll_id, option_id) VALUES ('$user_id', '$poll_id', '$selected_option')";
         
         if ($conn->query($insertVoteSql) === TRUE) {
-            // Update the `poll_options` table to increment the vote count
             $updateOptionSql = "UPDATE poll_options SET votes = votes + 1 WHERE id = '$selected_option'";
             $conn->query($updateOptionSql);
-
             echo "<div class='alert alert-success'>Vote submitted successfully!</div>";
         } else {
             echo "<div class='alert alert-danger'>Error submitting vote: " . $conn->error . "</div>";
@@ -36,7 +54,7 @@ user_id='$user_id' AND poll_id='$poll_id'";
 // Handle report submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['report_poll'])) {
     $poll_id = $_POST['poll_id'];
-    $user_id = $_SESSION['id']; // Assuming user_id is stored in session when logged in
+    $user_id = $_SESSION['id'];
 
     // Insert report into the `notifications` table for admin to review
     $reportSql = "INSERT INTO notifications (poll_id, user_id, message, is_read) VALUES ('$poll_id', '$user_id', 'User reported poll ID $poll_id.', FALSE)";
@@ -55,6 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['report_poll'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vote on Poll</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         .content {
             margin-left: 270px;
@@ -86,61 +105,42 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['report_poll'])) {
             color: #888;
             margin-bottom: 10px;
         }
-        .form-check {
-            margin-bottom: 10px;
-        }
-        .btn-submit {
-            background-color: #0B1042;
-            color: #fff;
-            border: none;
-            padding: 5px 15px;
-            font-weight: bold;
-            margin-right: 10px;
-            transition: background-color 0.3s ease;
-        }
-        .btn-submit:hover {
-            background-color: #1a237e;
-        }
-        .btn-clear {
-            color: #6c757d;
-            background: transparent;
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-        .btn-clear:hover {
-            color: #333;
-        }
-        .report-icon {
+        .icon-container {
             position: absolute;
             top: 10px;
             right: 10px;
-            cursor: pointer;
+            display: flex;
+            gap: 10px;
         }
-        .report-icon img {
-            width: 25px;
-            height: 25px;
+        .dropdown-menu {
+            font-size: 0.9rem;
         }
-        .report-icon img:hover {
-            filter: brightness(1.2);
+        .modal-content {
+            text-align: center;
         }
     </style>
 </head>
 <body>
-
-    <!-- Include Sidebar -->
     <?php include 'sidebar.php'; ?>
-
-    <!-- Main Content -->
     <div class="content">
         <h2 class="mt-5">Vote on Poll</h2>
         <?php if ($pollsResult->num_rows > 0): ?>
             <div class="poll-container">
                 <?php while ($poll = $pollsResult->fetch_assoc()): ?>
                     <div class="poll-card">
-                        <div class="report-icon" onclick="reportPoll(<?php echo $poll['id']; ?>)" title="Report Poll">
-                            <img src="report.png" alt="Report">
+                        <div class="icon-container">
+                            <!-- Report and Share Dropdown -->
+                            <img src="report.png" alt="Report" title="Report Poll" onclick="reportPoll(<?php echo $poll['id']; ?>)">
+                            <!-- <button class="btn btn-secondary" onclick="reportPoll(<?php echo $poll['id']; ?>)">Report</button> -->
+                            <div class="dropdown">
+                                <button class="btn btn-secondary dropdown-toggle" type="button" id="shareMenu<?php echo $poll['id']; ?>" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Share
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="shareMenu<?php echo $poll['id']; ?>">
+                                    <li><a class="dropdown-item" href="#" onclick="copyLink('<?php echo "http://localhost/onlinepollingsystem/view_poll.php?link=" . $poll['unique_link']; ?>')">Copy Link</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="showQRModal('<?php echo "http://localhost/onlinepollingsystem/view_poll.php?link=" . $poll['unique_link']; ?>')">Generate QR Code</a></li>
+                                </ul>
+                            </div>
                         </div>
                         <div class="poll-creator">Created by: <?php echo htmlspecialchars($poll['creator_name']); ?></div>
                         <h5><?php echo htmlspecialchars($poll['question']); ?></h5>
@@ -159,8 +159,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['report_poll'])) {
                                 </div>
                             <?php endwhile; ?>
                             <div class="d-flex justify-content-between mt-3">
-                                <button type="submit" name="submit_vote" class="btn btn-submit">Submit</button>
-                                <button type="button" class="btn-clear" onclick="clearSelection(<?php echo $poll['id']; ?>)">Clear</button>
+                                <button type="submit" name="submit_vote" class="btn btn-primary">Submit</button>
                             </div>
                         </form>
                     </div>
@@ -171,43 +170,69 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['report_poll'])) {
         <?php endif; ?>
     </div>
 
+    <!-- QR Code Modal -->
+    <div class="modal fade" id="qrModal" tabindex="-1" aria-labelledby="qrModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="qrModalLabel">QR Code</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="qrCodeContainer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
-        // Function to clear the selected option
-        function clearSelection(pollId) {
-            const radioButtons = document.querySelectorAll(`input[name="option"]`);
-            radioButtons.forEach(radio => {
-                if (radio.closest('form').querySelector(`input[name="poll_id"]`).value == pollId) {
-                    radio.checked = false;
-                }
+        function copyLink(link) {
+            navigator.clipboard.writeText(link).then(() => {
+                alert("Poll link copied to clipboard!");
+            }).catch(err => {
+                alert("Failed to copy link: " + err);
             });
         }
 
-        // Function to confirm and submit a report
         function reportPoll(pollId) {
-            const confirmReport = confirm("Do you want to report this poll?");
-            if (confirmReport) {
+            if (confirm("Do you want to report this poll?")) {
                 const form = document.createElement("form");
                 form.method = "POST";
                 form.action = "vote.php";
 
-                const inputPollId = document.createElement("input");
-                inputPollId.type = "hidden";
-                inputPollId.name = "poll_id";
-                inputPollId.value = pollId;
+                const pollInput = document.createElement("input");
+                pollInput.type = "hidden";
+                pollInput.name = "poll_id";
+                pollInput.value = pollId;
 
-                const inputReport = document.createElement("input");
-                inputReport.type = "hidden";
-                inputReport.name = "report_poll";
-                inputReport.value = true;
+                const reportInput = document.createElement("input");
+                reportInput.type = "hidden";
+                reportInput.name = "report_poll";
+                reportInput.value = "true";
 
-                form.appendChild(inputPollId);
-                form.appendChild(inputReport);
+                form.appendChild(pollInput);
+                form.appendChild(reportInput);
                 document.body.appendChild(form);
                 form.submit();
             }
         }
+
+        function showQRModal(link) {
+            const qrContainer = document.getElementById("qrCodeContainer");
+            qrContainer.innerHTML = ""; // Clear previous QR code
+            new QRCode(qrContainer, {
+                text: link,
+                width: 200,
+                height: 200,
+                colorDark: "#000",
+                colorLight: "#fff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            const qrModal = new bootstrap.Modal(document.getElementById("qrModal"));
+            qrModal.show();
+        }
     </script>
 </body>
 </html>
-
