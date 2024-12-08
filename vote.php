@@ -116,7 +116,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['report_poll'])) {
             font-size: 0.9rem;
         }
         .modal-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
             text-align: center;
+        }
+        #qrCodeContainer {
+            margin: 20px 0;
         }
     </style>
 </head>
@@ -130,8 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['report_poll'])) {
                     <div class="poll-card">
                         <div class="icon-container">
                             <!-- Report and Share Dropdown -->
-                            <img src="report.png" alt="Report" title="Report Poll" onclick="reportPoll(<?php echo $poll['id']; ?>)">
-                            <!-- <button class="btn btn-secondary" onclick="reportPoll(<?php echo $poll['id']; ?>)">Report</button> -->
+                            <button class="btn btn-secondary" onclick="reportPoll(<?php echo $poll['id']; ?>)">Report</button>
                             <div class="dropdown">
                                 <button class="btn btn-secondary dropdown-toggle" type="button" id="shareMenu<?php echo $poll['id']; ?>" data-bs-toggle="dropdown" aria-expanded="false">
                                     Share
