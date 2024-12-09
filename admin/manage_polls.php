@@ -3,13 +3,19 @@ include '../includes/sidebar.php';
 include '../includes/header.php';
 include '../connection.php';
 
+// Handle search functionality
+$searchQuery = '';
+if (isset($_GET['search']) && !empty($_GET['search'])) {
+    $searchQuery = $_GET['search'];
+}
+
 // Fetch totals
 $totalPolls = $conn->query("SELECT COUNT(*) AS total FROM polls")->fetch_assoc()['total'] ?? 0;
 $totalUsers = $conn->query("SELECT COUNT(*) AS total FROM prayojan")->fetch_assoc()['total'] ?? 0;
 $activePolls = $conn->query("SELECT COUNT(*) AS total FROM polls WHERE end_date >= CURDATE()")->fetch_assoc()['total'] ?? 0;
 
 // Fetch polls for Project Overview
-$pollsOverview = $conn->query("
+$pollsOverviewQuery = "
     SELECT polls.id, polls.question AS project_title, polls.created_at AS created_date,
            prayojan.name AS created_by, 
            SUM(poll_options.votes) AS votes, 
@@ -20,8 +26,14 @@ $pollsOverview = $conn->query("
     FROM polls
     JOIN prayojan ON polls.user_id = prayojan.id
     JOIN poll_options ON polls.id = poll_options.poll_id
-    GROUP BY polls.id
-");
+";
+
+if (!empty($searchQuery)) {
+    $pollsOverviewQuery .= " WHERE polls.question LIKE '%$searchQuery%'";
+}
+
+$pollsOverviewQuery .= " GROUP BY polls.id ORDER BY polls.created_at DESC";
+$pollsOverview = $conn->query($pollsOverviewQuery);
 ?>
 
 <!DOCTYPE html>
@@ -112,8 +124,10 @@ $pollsOverview = $conn->query("
         <div class="content">
             <!-- Search Polls -->
             <div class="search-container">
-                <input type="text" placeholder="Search Polls..." id="searchPolls">
-                <button onclick="searchPoll()">Search</button>
+                <form method="get" action="">
+                    <input type="text" name="search" placeholder="Search Polls..." value="<?php echo htmlspecialchars($searchQuery); ?>">
+                    <button type="submit">Search</button>
+                </form>
             </div>
 
             <!-- Statistics -->
@@ -165,8 +179,8 @@ $pollsOverview = $conn->query("
                                     <td><?php echo $poll['votes']; ?></td>
                                     <td><?php echo ucfirst($poll['status']); ?></td>
                                     <td>
-                                        <button class="btn btn-primary btn-sm">View</button>
-                                        <button class="btn btn-danger btn-sm">Delete</button>
+                                        <a href="view_poll.php?id=<?php echo $poll['id']; ?>" class="btn btn-primary btn-sm">View</a>
+                                        <a href="delete_poll.php?id=<?php echo $poll['id']; ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this poll?');">Delete</a>
                                     </td>
                                 </tr>
                             <?php endwhile; ?>
@@ -180,12 +194,5 @@ $pollsOverview = $conn->query("
             </div>
         </div>
     </div>
-
-    <script>
-        function searchPoll() {
-            const query = document.getElementById('searchPolls').value.trim();
-            alert('Search functionality is not implemented. Search query: ' + query);
-        }
-    </script>
 </body>
 </html>

@@ -67,44 +67,64 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['acknowledge_report']))
     <title>Notifications</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        .main-container {
-            display: flex;
-        }
-        .sidebar {
-            width: 250px;
-        }
-        .content {
-            flex: 1;
-            padding: 20px;
-            margin-left: 260px; /* Ensure the content starts after the sidebar */
-        }
-        .card {
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        .card-header {
-            font-weight: bold;
-            background-color: #007bff;
-            color: #fff;
-            padding: 10px 15px;
-        }
-        .card-body {
-            padding: 15px;
-        }
-        .btn-group {
-            display: flex;
-            gap: 10px;
-        }
-        table th, table td {
-            vertical-align: middle;
-        }
-        .table-container {
-            margin-top: 20px;
-        }
+   body { 
+    background-color: #f8f9fa;
+    margin: 0; /* Remove default body margin */
+    padding: 0; /* Remove default body padding */
+}
+
+.main-container {
+    display: flex;
+    height: 100vh; /* Full viewport height */
+}
+
+.sidebar {
+    width: 250px;
+    background-color: #f1f1f1; /* Optional: Add background color for sidebar */
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1); /* Optional: Add shadow to sidebar */
+}
+
+.content {
+    flex: 1;
+    padding: 20px;
+    margin: 0; /* Remove margin to align perfectly with sidebar */
+    box-sizing: border-box; /* Ensure padding doesn't add extra width */
+}
+
+.card {
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden; /* Ensure content doesn't overflow */
+}
+
+.card-header {
+    font-weight: bold;
+    background-color: #007bff;
+    color: #fff;
+    padding: 10px 15px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.card-body {
+    padding: 15px;
+    background-color: #fff; /* Add consistent background color for the card body */
+}
+
+.btn-group {
+    display: flex;
+    gap: 10px;
+}
+
+table th, table td {
+    vertical-align: middle;
+    text-align: center; /* Center-align table text for better readability */
+}
+
+.table-container {
+    margin-top: 20px;
+}
+
     </style>
 </head>
 <body>

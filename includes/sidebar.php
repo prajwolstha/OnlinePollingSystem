@@ -20,13 +20,13 @@
             </a>
             <ul style="list-style: none; padding-left: 30px; margin-top: 5px;">
                 <li style="margin: 5px 0;">
-                    <a href="newpoll.php" style="text-decoration: none; color: black;">
+                    <a href="new_poll.php" style="text-decoration: none; color: black;">
                         <img src="newpoll.png" alt="New Poll" style="width: 15px; height: 15px; margin-right: 5px;"> 
                         NEW POLL
                     </a>
                 </li>
                 <li style="margin: 5px 0;">
-                    <a href="editpoll.php" style="text-decoration: none; color: black;">
+                    <a href="edit_poll.php" style="text-decoration: none; color: black;">
                         <img src="editpoll.png" alt="Edit Poll" style="width: 15px; height: 15px; margin-right: 5px;"> 
                         EDIT POLL
                     </a>
