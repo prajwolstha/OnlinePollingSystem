@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 02, 2024 at 11:53 AM
+-- Generation Time: Dec 09, 2024 at 01:04 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -115,7 +115,21 @@ INSERT INTO `notifications` (`id`, `message`, `is_read`, `created_at`, `poll_id`
 (53, 'User reported poll ID 30.', 1, '2024-11-19 12:15:43', 30, 30),
 (54, 'User reported poll ID 30.', 1, '2024-11-20 02:06:11', 30, 30),
 (55, 'User reported poll ID 38.', 1, '2024-12-01 13:36:13', 38, 15),
-(56, 'User reported poll ID 39.', 1, '2024-12-02 02:32:06', 39, 12);
+(56, 'User reported poll ID 39.', 1, '2024-12-02 02:32:06', 39, 12),
+(57, 'User reported poll ID 39.', 1, '2024-12-03 02:01:48', 39, 12),
+(58, 'New document submission for verification from user ID: 41', 1, '2024-12-04 08:56:06', NULL, NULL),
+(59, 'New document submission for verification from user ID: 41', 1, '2024-12-04 08:58:28', NULL, NULL),
+(60, 'New document submission for verification from user ID: 41', 1, '2024-12-04 09:00:05', NULL, NULL),
+(61, 'User reported poll ID 40.', 1, '2024-12-05 01:29:51', 40, 10),
+(62, 'User reported poll ID 41.', 1, '2024-12-05 11:55:25', 41, 10),
+(63, 'New document submission for verification from user ID: 45', 1, '2024-12-06 13:00:42', NULL, NULL),
+(64, 'New document submission for verification from user ID: 45', 1, '2024-12-06 13:01:17', NULL, NULL),
+(65, 'New document submission for verification from user ID: 48', 1, '2024-12-07 03:20:47', NULL, NULL),
+(66, 'New document submission for verification from user ID: 48', 1, '2024-12-07 03:21:20', NULL, NULL),
+(67, 'New document submission for verification from user ID: 51', 1, '2024-12-07 03:56:59', NULL, NULL),
+(68, 'User reported poll ID 49.', 1, '2024-12-07 04:28:22', 49, 48),
+(69, 'New document submission for verification from user ID: 52', 1, '2024-12-07 04:34:56', NULL, NULL),
+(70, 'New document submission for verification from user ID: 50', 1, '2024-12-09 10:41:03', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -144,23 +158,20 @@ CREATE TABLE `polls` (
   `poll_type` varchar(50) DEFAULT NULL,
   `start_date` date DEFAULT NULL,
   `end_date` date DEFAULT NULL,
-  `user_id` int(11) NOT NULL
+  `user_id` int(11) NOT NULL,
+  `unique_link` varchar(255) DEFAULT NULL,
+  `created_by` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `polls`
 --
 
-INSERT INTO `polls` (`id`, `question`, `created_at`, `category`, `poll_type`, `start_date`, `end_date`, `user_id`) VALUES
-(30, 'what is your name', '2024-11-13 13:01:42', 'Entertainment', NULL, '2024-11-13', '2024-11-20', 24),
-(31, 'who is best player?', '2024-11-13 13:02:18', 'Sports', NULL, '2024-11-13', '2024-11-21', 24),
-(33, 'do u like anil?', '2024-11-14 03:39:28', 'Entertainment', NULL, '2024-11-14', '2024-11-21', 12),
-(34, 'who is don?', '2024-11-14 08:23:31', 'Entertainment', NULL, '2024-11-21', '2024-11-28', 17),
-(35, 'hello from the other side??', '2024-11-14 11:12:18', 'Entertainment', NULL, '2024-11-14', '2024-11-21', 12),
-(36, 'who is topper?', '2024-11-19 12:21:53', '', NULL, '0000-00-00', '0000-00-00', 24),
-(37, 'hello', '2024-11-20 02:16:52', 'Education', NULL, '2024-11-13', '2024-11-28', 24),
-(38, 'which is the tallest mountain?', '2024-12-01 13:32:52', 'Education', NULL, '2024-12-01', '2024-12-02', 30),
-(39, 'what is yoru fkjdsfhdsakfh/', '2024-12-02 02:29:23', 'Entertainment', NULL, '2024-12-02', '2024-12-10', 30);
+INSERT INTO `polls` (`id`, `question`, `created_at`, `category`, `poll_type`, `start_date`, `end_date`, `user_id`, `unique_link`, `created_by`) VALUES
+(49, 'who is best player?', '2024-12-07 03:58:26', 'Sports', NULL, '2024-12-07', '2024-12-08', 51, 'poll_6753c7e2dfeba5.00714009', 0),
+(50, 'who is the fastest footballer in the world?', '2024-12-07 04:14:26', 'Sports', NULL, '2024-12-07', '2024-12-08', 51, 'poll_6753cba2145c19.95680667', 0),
+(51, 'In which continent Nepal lies?', '2024-12-09 10:50:51', 'Education', NULL, '2024-12-09', '2024-12-10', 50, 'poll_6756cb8b703e67.58591762', 0),
+(52, 'Which is the national game of the Nepal?', '2024-12-09 10:56:33', 'Sports', NULL, '2024-12-10', '2024-12-11', 48, 'poll_6756cce10f7801.52812688', 0);
 
 -- --------------------------------------------------------
 
@@ -180,41 +191,22 @@ CREATE TABLE `poll_options` (
 --
 
 INSERT INTO `poll_options` (`id`, `poll_id`, `option_text`, `votes`) VALUES
-(140, 30, 'ramu', 2),
-(141, 30, 'shmu', 0),
-(142, 30, 'prajwol', 1),
-(143, 30, 'rojan', 0),
-(144, 31, 'messi', 3),
-(145, 31, 'ronaldo', 0),
-(146, 31, 'neymar', 0),
-(147, 31, 'pele', 0),
-(150, 33, 'yes', 3),
-(151, 33, 'no', 0),
-(152, 33, 'idk', 1),
-(153, 34, 'aa', 0),
-(154, 34, 'dd', 2),
-(155, 34, 'ff', 0),
-(156, 34, 'tt', 0),
-(157, 35, 'adele', 0),
-(158, 35, 'taylor', 1),
-(159, 35, 'beyonce', 2),
-(160, 35, 'prajwol', 0),
-(161, 36, 'ram', 0),
-(162, 36, 'shyam', 0),
-(163, 36, 'hari', 0),
-(164, 36, 'ganesh', 0),
-(165, 37, 'ee', 1),
-(166, 37, 'rr', 0),
-(167, 37, 'tt', 0),
-(168, 37, 'yy', 0),
-(169, 38, 'mt elburus', 0),
-(170, 38, 'mt maklau', 0),
-(171, 38, 'mt k2', 1),
-(172, 38, 'mt everest', 0),
-(173, 39, 'ff', 1),
-(174, 39, 'gg', 1),
-(175, 39, 'hh', 0),
-(176, 39, 'ii', 0);
+(217, 49, 'Messi', 1),
+(218, 49, 'Ronaldo', 0),
+(219, 49, 'Pele', 1),
+(220, 49, 'Maradona', 0),
+(221, 50, 'Kyle Wlaker', 1),
+(222, 50, 'Ronaldo', 0),
+(223, 50, 'Pele', 0),
+(224, 50, 'Maradona', 0),
+(225, 51, 'Europe', 0),
+(226, 51, 'Asia', 1),
+(227, 51, 'South America', 0),
+(228, 51, 'Africa', 0),
+(229, 52, 'VolleyBall', 1),
+(230, 52, 'DandiBiyo', 0),
+(231, 52, 'Kabbadi', 0),
+(232, 52, 'Karate', 0);
 
 -- --------------------------------------------------------
 
@@ -231,36 +223,20 @@ CREATE TABLE `prayojan` (
   `country` varchar(255) NOT NULL,
   `address` varchar(255) NOT NULL,
   `verified` tinyint(1) DEFAULT 0,
-  `profile_pic` varchar(255) DEFAULT 'uploads/default_profile.png'
+  `profile_pic` varchar(255) DEFAULT 'uploads/default_profile.png',
+  `last_active` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `prayojan`
 --
 
-INSERT INTO `prayojan` (`id`, `name`, `phone`, `email`, `password`, `country`, `address`, `verified`, `profile_pic`) VALUES
-(8, 'admin', 987654321, 'admin@a.com', '21232f297a57a5a743894a0e4a801fc3', 'adminland', 'adminland', 1, 'uploads/image.png'),
-(9, 'abc', 987654321, 'abc@abc.com', '900150983cd24fb0d6963f7d28e17f72', 'adminland', 'adminland', 1, 'uploads/heroimg.jpg'),
-(10, 'SUYOG KADARIYA', 2147483647, '7suyog@gmail.com', '5c9e01573cef0ba08498875b98b02029', 'Nepal', 'Budhanilkantha - 10, Kathmandu', 1, 'uploads/pizza-pizza-filled-with-tomatoes-salami-olives.jpg'),
-(11, 'prajwoldon', 2147483647, 'prajwol123@gamil.com', 'f0a72478bf1066fec30d729f0c547c4f', 'Nepal', 'Budhanilkantha - 10, Kathmandu', 1, 'uploads/default_profile.png'),
-(12, 'Rojan Thami', 2147483647, 'rojan@gmail.com', '0ed8d98967c0cb60a39fd225803e0dfb', 'Nepal', 'Budhanilkantha - 10, Kathmandu', 1, 'uploads/Prajwol Shrestha (1).jpg'),
-(13, 'PRANJU SHRESTHA', 2147483647, 'pranju@gmail.com', '75097016e0e2cda52eb4535a4b5ac7ff', 'Nepal', 'Budhanilkantha - 10, Kathmandu', 0, 'uploads/activity.png'),
-(14, 'ram thapa', 2147483647, 'ramthapa@gmail.com', '4641999a7679fcaef2df0e26d11e3c72', 'Nepal', 'ramuland', 0, 'uploads/Screenshot 2024-09-04 165855.png'),
-(15, 'sir', 2147483647, 'sir@gmail.com', 'dcff57c9a964f83fbf81cc75ec2e413a', 'Nepal', 'Budhanilkantha - 10, Kathmandu', 1, 'uploads/logo.jpg'),
-(16, 'samosa', 777777777, 'samosa@gmail.com', 'b0c39b2b615a250c8ebf9a4a0d323686', 'japan', 'jjjjjjjjjjjj', 1, 'uploads/Prajwol Shrestha.jpg'),
-(17, 'pratix', 0, 'pratik@gmail.com', '0cb2b62754dfd12b6ed0161d4b447df7', 'nepal', 'fdsafdsafdsaf', 1, 'uploads/momo.jpg'),
-(18, 'Prajwol Shrestha', 2147483647, '7suyog@gmail.com', '5c9e01573cef0ba08498875b98b02029', 'Nepal', 'Galyang', 0, 'uploads/default_profile.png'),
-(19, 'aa', 2147483647, 'aa@gmail.com', '4124bc0a9335c27f086f24ba207a4912', 'Nepal', 'Galyang', 0, 'uploads/default_profile.png'),
-(20, 'bb', 90000000, 'bb@gmail.com', '21ad0bd836b90d08f4cf640b4c298e7c', 'Nepal', 'Galyang', 0, 'uploads/default_profile.png'),
-(21, 'ww', 2147483647, 'ww@gmail.com', 'ww', 'Nepal', 'Galyang', 0, 'uploads/default_profile.png'),
-(22, 'a', 1, 'a@a.com', '0cc175b9c0f1b6a831c399e269772661', 'a', 'a', 0, 'uploads/default_profile.png'),
-(23, 'mandip', 3333333, 'mandip@gmail.com', '847ae2bef98a01bf5c12a7b7d053ae5f', 'Nepal', 'gaushala', 1, 'uploads/default_profile.png'),
-(24, 'ram karki', 987654321, 'ramkarki@gmail.com', '48cc2afa9781bd59887ea3c1f5ab9b4e', 'Nepal', 'gaushala', 1, 'uploads/Screenshot 2024-08-27 232949.png'),
-(25, 'hari thapa', 1234567891, 'harithapa@gmail.com', 'a9bcf1e4d7b95a22e2975c812d938889', 'Nepal', 'kapan', 0, 'uploads/default_profile.png'),
-(26, 'komal', 2147483647, 'komal@gmail.com', '690b4bac6ca9fb81814128a294470f92', 'Nepal', 'Budhanilkantha - 10, Kathmandu', 1, 'uploads/Screenshot 2024-08-31 234011.png'),
-(29, 'Prajwol Shrestha', 2147483647, 'prazolstha12345@gmail.com', '0192023a7bbd73250516f069df18b500', 'Nepal', 'Galyang', 0, 'uploads/default_profile.png'),
-(30, 'Prajwol Shrestha', 2147483647, 'prajwol1@gmail.com', '80bd50c15f693f95b78807ecefee980b', 'Nepal', 'Galyang', 1, 'uploads/Prajwol Shrestha (1).jpg'),
-(31, 'ankit thapa', 987657899, 'ankit@gmail.com', '447d2c8dc25efbc493788a322f1a00e7', 'Nepal', 'kapan', 1, 'uploads/biriyani.jpg');
+INSERT INTO `prayojan` (`id`, `name`, `phone`, `email`, `password`, `country`, `address`, `verified`, `profile_pic`, `last_active`) VALUES
+(48, 'Prajwol Shrestha', 2147483647, 'prajwolbca22@oic.edu.np', 'd11b0e594756c95007b5e29b9a429640', 'Nepal', 'Budhanilkantha - 10, Kathmandu', 1, 'uploads/wallpaperflare.com_wallpaper (1).jpg', NULL),
+(49, 'rozan thami', 2147483647, 'knoxx799@gmail.com', '69b48de3850dd5193ed6859fb5788583', 'Nepal', 'Budhanilkantha - 10, Kathmandu', 0, 'uploads/default_profile.png', NULL),
+(50, 'SUYOG KADARIYA', 2147483647, '7suyog@gmail.com', '5c9e01573cef0ba08498875b98b02029', 'Nepal', 'Budhanilkantha - 10, Kathmandu', 1, 'uploads/wallpaperflare.com_wallpaper (1).jpg', NULL),
+(51, 'prajwol don', 980000000, 'prazolstha12345@gmail.com', '9e01454a2a4d5114b4e8c67d21e0cdd7', 'Nepal', 'Budhanilkantha - 10, Kathmandu', 1, 'uploads/Prajwol Shrestha (1).jpg', NULL),
+(52, 'Ankit Dahal', 0, 'dahal.ankit7@gmail.com', '447d2c8dc25efbc493788a322f1a00e7', 'test', 'test', 1, 'uploads/front.jpg', NULL);
 
 -- --------------------------------------------------------
 
@@ -280,12 +256,7 @@ CREATE TABLE `user_notifications` (
 --
 
 INSERT INTO `user_notifications` (`id`, `user_id`, `message`, `created_at`) VALUES
-(1, 24, 'k ho bhayena hai', '2024-11-19 12:16:10'),
-(2, 24, 'k ho bhayena hai', '2024-11-19 12:19:42'),
-(3, 24, 'k ho bhayena hai', '2024-11-19 12:19:56'),
-(4, 24, 'k pollhalis mula', '2024-11-20 02:06:34'),
-(5, 30, 'this poll is restricted because of violating the rules and regulation.', '2024-12-01 13:37:45'),
-(6, 30, 'delete this poll', '2024-12-02 02:32:47');
+(9, 51, 'change this', '2024-12-07 04:29:14');
 
 -- --------------------------------------------------------
 
@@ -306,24 +277,11 @@ CREATE TABLE `verification_documents` (
 --
 
 INSERT INTO `verification_documents` (`id`, `user_id`, `document`, `status`, `photo`) VALUES
-(1, 8, 'uploads/heroimg.jpg', 'approved', 'uploads/heroimg.jpg'),
-(2, 9, 'uploads/pizza-pizza-filled-with-tomatoes-salami-olives.jpg', 'approved', 'uploads/heroimg.jpg'),
-(3, 10, 'uploads/heroimg.jpg', 'approved', 'uploads/heroimg.jpg'),
-(4, 10, 'uploads/heroimg.jpg', 'rejected', 'uploads/heroimg.jpg'),
-(5, 11, 'uploads/Screenshot 2024-08-27 235130.png', 'approved', 'uploads/Screenshot 2024-10-03 111333.png'),
-(6, 11, 'uploads/Screenshot 2024-08-27 235130.png', 'rejected', 'uploads/Screenshot 2024-10-03 111333.png'),
-(7, 10, 'uploads/verification_docs/verified.png', 'rejected', 'uploads/verification_docs/Approval.png'),
-(8, 12, 'uploads/verification_docs/LUCK.jpg', 'approved', 'uploads/verification_docs/Prajwol Shrestha.jpg'),
-(9, 12, 'uploads/verification_docs/LUCK.jpg', 'rejected', 'uploads/verification_docs/Prajwol Shrestha.jpg'),
-(10, 16, 'uploads/biriyani.jpg', 'approved', 'uploads/biriyani.jpg'),
-(11, 16, 'uploads/biriyani.jpg', 'approved', 'uploads/biriyani.jpg'),
-(12, 23, 'uploads/Prajwol Shrestha (1).jpg', 'approved', 'uploads/Prajwol Shrestha (1).jpg'),
-(13, 26, 'uploads/6734b7bbe4425_Screenshot 2024-08-31 220802.png', 'approved', 'uploads/6734b7bbe4431_Screenshot 2024-08-31 230652.png'),
-(14, 15, 'uploads/6735717f02cfe_Pranju Resume (2).pdf', 'approved', 'uploads/6735717f02d07_Pranju Resume (1).pdf'),
-(15, 15, 'uploads/6735719d9b69b_Pranju Resume (2).pdf', 'rejected', 'uploads/6735719d9b6a7_Pranju Resume (1).pdf'),
-(16, 30, 'uploads/6735eb08f02b6_Prajwol Shrestha (1).jpg', 'approved', 'uploads/6735eb08f02c4_Prajwol Shrestha (1).jpg'),
-(17, 31, 'uploads/67386edca82c8_verified-icon.png', 'approved', 'uploads/67386edca82d5_heroimg.jpg'),
-(18, 31, 'uploads/67386f0aeb19f_verified-icon.png', 'approved', 'uploads/67386f0aeb1a7_heroimg.jpg');
+(24, 48, 'uploads/6753bf0f64c41_WhatsApp Image 2024-11-16 at 4.39.25 PM (1).jpeg', 'approved', 'uploads/6753bf0f64c58_wallpaperflare.com_wallpaper.jpg'),
+(25, 48, 'uploads/6753bf30bac15_WhatsApp Image 2024-11-16 at 4.39.25 PM (1).jpeg', 'rejected', 'uploads/6753bf30bac23_wallpaperflare.com_wallpaper.jpg'),
+(26, 51, 'uploads/6753c78b40b92_WhatsApp Image 2024-11-16 at 4.39.25 PM.jpeg', 'approved', 'uploads/6753c78b40bac_wallpaperflare.com_wallpaper (1).jpg'),
+(27, 52, 'uploads/6753d07008975_WhatsApp Image 2024-11-16 at 4.39.25 PM.jpeg', 'approved', 'uploads/6753d0700897e_verified-icon.png'),
+(28, 50, 'uploads/6756c93f95b70_wallpaperflare.com_wallpaper (1).jpg', 'approved', 'uploads/6756c93f95d30_wallpaperflare.com_wallpaper.jpg');
 
 -- --------------------------------------------------------
 
@@ -378,7 +336,29 @@ INSERT INTO `votes` (`id`, `poll_id`, `option_id`, `user_id`, `created_at`) VALU
 (42, 37, 165, 24, '2024-11-20 02:17:32'),
 (43, 38, 171, 30, '2024-12-01 13:35:02'),
 (44, 39, 173, 12, '2024-12-02 02:31:30'),
-(45, 39, 174, 30, '2024-12-02 09:55:00');
+(45, 39, 174, 30, '2024-12-02 09:55:00'),
+(46, 39, 174, 0, '2024-12-04 01:47:15'),
+(47, 40, 179, 12, '2024-12-04 09:40:48'),
+(48, 40, 177, 24, '2024-12-04 09:41:26'),
+(49, 40, 178, 17, '2024-12-04 09:42:14'),
+(50, 40, 180, 15, '2024-12-04 09:42:49'),
+(51, 40, 179, 10, '2024-12-04 10:17:15'),
+(52, 41, 186, 10, '2024-12-04 10:34:42'),
+(53, 41, 185, 17, '2024-12-04 11:11:59'),
+(54, 42, 189, 17, '2024-12-04 12:13:06'),
+(55, 40, 177, 16, '2024-12-04 13:20:03'),
+(56, 41, 187, 16, '2024-12-04 13:20:08'),
+(57, 42, 191, 16, '2024-12-04 13:20:11'),
+(58, 42, 191, 10, '2024-12-05 03:08:03'),
+(59, 44, 197, 0, '2024-12-05 12:27:15'),
+(60, 46, 207, 10, '2024-12-05 14:41:35'),
+(61, 46, 206, 12, '2024-12-05 14:45:23'),
+(62, 46, 206, 45, '2024-12-06 13:04:48'),
+(63, 49, 219, 48, '2024-12-07 04:25:00'),
+(64, 50, 221, 48, '2024-12-07 04:25:10'),
+(65, 49, 217, 52, '2024-12-07 04:35:43'),
+(66, 51, 226, 48, '2024-12-09 10:54:25'),
+(67, 52, 229, 50, '2024-12-09 10:57:07');
 
 --
 -- Indexes for dumped tables
@@ -407,7 +387,8 @@ ALTER TABLE `otp_verification`
 -- Indexes for table `polls`
 --
 ALTER TABLE `polls`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_link` (`unique_link`);
 
 --
 -- Indexes for table `poll_options`
@@ -458,49 +439,49 @@ ALTER TABLE `admin_users`
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=57;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=71;
 
 --
 -- AUTO_INCREMENT for table `otp_verification`
 --
 ALTER TABLE `otp_verification`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `polls`
 --
 ALTER TABLE `polls`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=53;
 
 --
 -- AUTO_INCREMENT for table `poll_options`
 --
 ALTER TABLE `poll_options`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=177;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=233;
 
 --
 -- AUTO_INCREMENT for table `prayojan`
 --
 ALTER TABLE `prayojan`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=53;
 
 --
 -- AUTO_INCREMENT for table `user_notifications`
 --
 ALTER TABLE `user_notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `verification_documents`
 --
 ALTER TABLE `verification_documents`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT for table `votes`
 --
 ALTER TABLE `votes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=68;
 
 --
 -- Constraints for dumped tables
