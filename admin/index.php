@@ -77,30 +77,34 @@ $offlineUsers = $totalUsers - $activeUsers;
             gap: 20px;
             margin-top: 20px;
         }
+        /*  */
         .vertical-sections {
-        flex: 2;
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-    }
-    .card {
-        display: flex;
-        align-items: center;
-        border-radius: 10px;
-        padding: 10px 20px;
-        color: #fff;
-        font-size: 16px;
-        font-weight: bold;
-        background-size: contain;
-    }
-    .card img {
-        width: 60px;
-        height: 60px;
-        margin-right: 15px;
-    }
-    .card.blue { background-color: #007bff; }
-    .card.green { background-color: #28a745; }
-    .card.yellow { background-color: #ffc107; color: #333; }
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Reduced gap between cards */
+}
+
+.card {
+    display: flex;
+    align-items: center; /* Aligns image and text in a single line */
+    border-radius: 10px;
+    padding: 10px;
+    color: #fff;
+    font-size: 14px; /* Adjusted font size for compact look */
+    font-weight: bold;
+    background-size: contain;
+}
+
+.card img {
+    width: 50px; /* Reduced size of the image */
+    height: 50px;
+}
+
+.card.blue { background-color: #007bff; }
+.card.green { background-color: #28a745; }
+.card.yellow { background-color: #ffc107; color: #333; }
+
         .trending-polls {
             flex: 6;
             background: #fff;
@@ -137,30 +141,37 @@ $offlineUsers = $totalUsers - $activeUsers;
             <div class="trending-container">
             <div class="vertical-sections">
     <div class="card blue">
-        <img src="pollicon.png" alt="Total Polls">
-        <div>
-            <span>Total Polls</span>
-            <br>
-            <span><?php echo $totalPolls; ?></span>
+        <div style="display: flex; align-items: center;">
+            <img src="pollicon.png" alt="Total Polls">
+            <div style="margin-left: 15px;">
+                <span>Total Polls</span>
+                <br>
+                <span><?php echo $totalPolls; ?></span>
+            </div>
         </div>
     </div>
     <div class="card green">
-        <img src="pollicon.png" alt="Active Polls">
-        <div>
-            <span>Active Polls</span>
-            <br>
-            <span><?php echo $activePolls; ?></span>
+        <div style="display: flex; align-items: center;">
+            <img src="pollicon.png" alt="Active Polls">
+            <div style="margin-left: 15px;">
+                <span>Active Polls</span>
+                <br>
+                <span><?php echo $activePolls; ?></span>
+            </div>
         </div>
     </div>
     <div class="card yellow">
-        <img src="pollicon.png" alt="Total Users">
-        <div>
-            <span>Total Users</span>
-            <br>
-            <span><?php echo $totalUsers; ?></span>
+        <div style="display: flex; align-items: center;">
+            <img src="pollicon.png" alt="Total Users">
+            <div style="margin-left: 15px;">
+                <span>Total Users</span>
+                <br>
+                <span><?php echo $totalUsers; ?></span>
+            </div>
         </div>
     </div>
 </div>
+
                 <?php
                 // Fetch trending polls
 $trendingPolls = $conn->query("
@@ -175,7 +186,7 @@ $trendingPolls = $conn->query("
     JOIN poll_options ON polls.id = poll_options.poll_id
     GROUP BY polls.id, polls.question, prayojan.name, polls.end_date
     ORDER BY total_votes DESC
-    LIMIT 5
+    LIMIT 3
 ");
 ?>
 

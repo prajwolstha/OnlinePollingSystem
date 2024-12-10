@@ -70,8 +70,8 @@ $profile_pic = $user['profile_pic'] ?? 'uploads/default_profile.png'; // Fallbac
         background-color: #1a2c41;
         cursor: pointer;
     }
-    menu a{
-        
+    .menu > a{
+        padding-left:10px;
     }
     
 
