@@ -1,17 +1,39 @@
 <?php
-include '../includes/header.php';
-include '../includes/sidebar.php';
-include '../connection.php'; // Ensure this file sets up the $conn variable correctly
-
 // Check if the database connection is established
+$conn = mysqli_connect('localhost', 'root', '', 'dstudios_poll'); // Replace with your actual parameters
 if (!$conn) {
     die("Database connection failed: " . mysqli_connect_error());
 }
 
-// Fetch totals
-$totalPolls = $conn->query("SELECT COUNT(*) as total FROM polls")->fetch_assoc()['total'] ?? 0;
-$activePolls = $conn->query("SELECT COUNT(*) as total FROM polls WHERE end_date >= CURDATE()")->fetch_assoc()['total'] ?? 0;
-$totalUsers = $conn->query("SELECT COUNT(*) as total FROM prayojan")->fetch_assoc()['total'] ?? 0;
+// Fetch total polls
+$result = mysqli_query($conn, "SELECT COUNT(*) as total FROM polls");
+$totalPolls = 0; // Initialize default
+if ($result) {
+    $row = mysqli_fetch_assoc($result);
+    if ($row) {
+        $totalPolls = $row['total'];
+    }
+}
+
+// Fetch active polls
+$result = mysqli_query($conn, "SELECT COUNT(*) as total FROM polls WHERE end_date >= CURDATE()");
+$activePolls = 0; // Initialize default
+if ($result) {
+    $row = mysqli_fetch_assoc($result);
+    if ($row) {
+        $activePolls = $row['total'];
+    }
+}
+
+// Fetch total users
+$result = mysqli_query($conn, "SELECT COUNT(*) as total FROM prayojan");
+$totalUsers = 0; // Initialize default
+if ($result) {
+    $row = mysqli_fetch_assoc($result);
+    if ($row) {
+        $totalUsers = $row['total'];
+    }
+}
 
 // Fetch trending polls
 $trendingPolls = $conn->query("
@@ -26,9 +48,18 @@ $trendingPolls = $conn->query("
 ");
 
 // Fetch user status counts
-$activeUsersQuery = $conn->query("SELECT COUNT(*) as total FROM prayojan WHERE last_active >= DATE_SUB(NOW(), INTERVAL 30 DAY)");
-$activeUsers = $activeUsersQuery->fetch_assoc()['total'] ?? 0;
-$offlineUsers = $totalUsers - $activeUsers;
+$activeUsersQuery = mysqli_query($conn, "SELECT COUNT(*) as total FROM prayojan WHERE last_active >= DATE_SUB(NOW(), INTERVAL 30 DAY)");
+$activeUsers = 0; // Initialize active users count
+
+if ($activeUsersQuery) {
+    $row = mysqli_fetch_assoc($activeUsersQuery);
+    if ($row) {
+        $activeUsers = $row['total'];
+    }
+}
+
+$offlineUsers = $totalUsers - $activeUsers; // Calculate offline users by subtracting active users from total users
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -115,10 +146,10 @@ $offlineUsers = $totalUsers - $activeUsers;
             background-color: #007bff;
             color: #fff;
         }
-    </style>
+        </style>
 </head>
 <body>
-    <div class="main-container">
+<div class="main-container">
         <!-- Sidebar -->
         <div class="sidebar">
             <?php include '../includes/sidebar.php'; ?>
@@ -171,9 +202,10 @@ $offlineUsers = $totalUsers - $activeUsers;
     </div>
 </div>
 
-                <?php
-                // Fetch trending polls
-$trendingPolls = $conn->query("
+
+<?php
+// Fetch trending polls
+$query = "
     SELECT polls.question AS title, prayojan.name AS created_by, 
            SUM(poll_options.votes) AS total_votes, 
            CASE 
@@ -186,9 +218,10 @@ $trendingPolls = $conn->query("
     GROUP BY polls.id, polls.question, prayojan.name, polls.end_date
     ORDER BY total_votes DESC
     LIMIT 3
-");
-?>
+";
 
+$trendingPolls = mysqli_query($conn, $query);
+?>
 <!-- Trending Polls Table -->
 <div class="trending-polls">
     <h5>Trending Polls</h5>
@@ -202,11 +235,11 @@ $trendingPolls = $conn->query("
             </tr>
         </thead>
         <tbody>
-            <?php if ($trendingPolls && $trendingPolls->num_rows > 0): ?>
-                <?php while ($poll = $trendingPolls->fetch_assoc()): ?>
+            <?php if (mysqli_num_rows($trendingPolls) > 0): ?>
+                <?php while ($poll = mysqli_fetch_assoc($trendingPolls)): ?>
                     <tr>
-                        <td><?php echo htmlspecialchars($poll['title']); ?></td>
-                        <td><?php echo htmlspecialchars($poll['created_by']); ?></td>
+                        <td><?php echo $poll['title']; ?></td>
+                        <td><?php echo $poll['created_by']; ?></td>
                         <td><?php echo $poll['total_votes']; ?></td>
                         <td><?php echo ucfirst($poll['status']); ?></td>
                     </tr>
@@ -219,9 +252,7 @@ $trendingPolls = $conn->query("
         </tbody>
     </table>
 </div>
-
-
-    <script>
+<script>
         // User Activity Chart
         const userActivityCtx = document.getElementById('userActivityChart').getContext('2d');
         new Chart(userActivityCtx, {

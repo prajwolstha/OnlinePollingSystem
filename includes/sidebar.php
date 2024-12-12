@@ -1,3 +1,4 @@
+
 <div class="sidebar" style="width: 250px; background-color: #0B1042; height: 100vh; position: fixed; top: 0; left: 0; box-shadow: 2px 0 5px rgba(0,0,0,0.1);">
     <div class="sidebar-header" style="padding: 20px; text-align: center;">
         <img src="../icons/mainlogo.png" alt="Prayojan" style="width: 80px; height: auto; margin-bottom: 10px;">
@@ -51,3 +52,19 @@
         </li>
     </ul>
 </div>
+
+<style>
+    .sidebar-menu li a:hover {
+    background-color: #ffffff;
+    color: #0B1042 !important; /* Ensures text color is applied */
+    border-radius: 15px; /* Rounded corners as requested */
+    padding: 10px 15px; /* Optional: Add some padding for better appearance */
+    transition: background-color 0.3s, color 0.3s; /* Smooth transition effect */
+}
+
+.sidebar-menu li a:hover img {
+    filter: invert(28%) sepia(96%) saturate(748%) hue-rotate(224deg) brightness(94%) contrast(89%);
+    /* Adjusts the image color on hover to match the new theme */
+}
+
+</style>
