@@ -2,17 +2,51 @@
 include '../includes/sidebar.php';
 include '../includes/header.php';
 include '../connection.php';
-
 // Handle search functionality
 $searchQuery = '';
-if (isset($_GET['search']) && !empty($_GET['search'])) {
-    $searchQuery = $_GET['search'];
+if (isset($_GET['search']) && trim($_GET['search']) != '') {
+    $searchQuery = mysqli_real_escape_string($conn, $_GET['search']);
 }
 
-// Fetch totals
-$totalPolls = $conn->query("SELECT COUNT(*) AS total FROM polls")->fetch_assoc()['total'] ?? 0;
-$totalUsers = $conn->query("SELECT COUNT(*) AS total FROM prayojan")->fetch_assoc()['total'] ?? 0;
-$activePolls = $conn->query("SELECT COUNT(*) AS total FROM polls WHERE end_date >= CURDATE()")->fetch_assoc()['total'] ?? 0;
+// Fetch total polls
+$result = mysqli_query($conn, "SELECT COUNT(*) AS total FROM polls");
+$totalPolls = 0; // Initialize default
+if ($result) {
+    $row = mysqli_fetch_assoc($result);
+    if ($row) {
+        $totalPolls = $row['total'];
+    }
+}
+
+// Fetch total users
+$result = mysqli_query($conn, "SELECT COUNT(*) AS total FROM prayojan");
+$totalUsers = 0; // Initialize default
+if ($result) {
+    $row = mysqli_fetch_assoc($result);
+    if ($row) {
+        $totalUsers = $row['total'];
+    }
+}
+
+// Fetch active polls
+$result = mysqli_query($conn, "SELECT COUNT(*) AS total FROM polls WHERE end_date >= CURDATE()");
+$activePolls = 0; // Initialize default
+if ($result) {
+    $row = mysqli_fetch_assoc($result);
+    if ($row) {
+        $activePolls = $row['total'];
+    }
+}
+
+// Fetch total polls
+$result = mysqli_query($conn, "SELECT COUNT(*) as total FROM polls");
+$totalPolls = 0; // Initialize default
+if ($result) {
+    $row = mysqli_fetch_assoc($result);
+    if ($row) {
+        $totalPolls = $row['total'];
+    }
+}
 
 // Fetch polls for Project Overview
 $pollsOverviewQuery = "
@@ -27,15 +61,18 @@ $pollsOverviewQuery = "
     JOIN prayojan ON polls.user_id = prayojan.id
     JOIN poll_options ON polls.id = poll_options.poll_id
 ";
-
+// Append search condition if searchQuery is not empty
 if (!empty($searchQuery)) {
-    $pollsOverviewQuery .= " WHERE polls.question LIKE '%$searchQuery%'";
+    $pollsOverviewQuery .= " WHERE polls.question LIKE '%" . mysqli_real_escape_string($conn, $searchQuery) . "%'";
 }
 
+// Append GROUP BY and ORDER BY clauses to complete the query
 $pollsOverviewQuery .= " GROUP BY polls.id ORDER BY polls.created_at DESC";
-$pollsOverview = $conn->query($pollsOverviewQuery);
-?>
 
+// Execute the query
+$pollsOverview = mysqli_query($conn, $pollsOverviewQuery);
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -155,8 +192,8 @@ $pollsOverview = $conn->query($pollsOverviewQuery);
                 </div>
             </div>
 
-            <!-- Project Overview Table -->
-            <div class="table-container">
+   <!-- Project Overview Table -->
+   <div class="table-container">
                 <h5>Project Overview</h5>
                 <table class="table table-striped">
                     <thead>
@@ -170,26 +207,26 @@ $pollsOverview = $conn->query($pollsOverviewQuery);
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if ($pollsOverview && $pollsOverview->num_rows > 0): ?>
-                            <?php while ($poll = $pollsOverview->fetch_assoc()): ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($poll['project_title']); ?></td>
-                                    <td><?php echo htmlspecialchars($poll['created_date']); ?></td>
-                                    <td><?php echo htmlspecialchars($poll['created_by']); ?></td>
-                                    <td><?php echo $poll['votes']; ?></td>
-                                    <td><?php echo ucfirst($poll['status']); ?></td>
-                                    <td>
-                                        <a href="view_poll.php?id=<?php echo $poll['id']; ?>" class="btn btn-primary btn-sm">View</a>
-                                        <a href="delete_poll.php?id=<?php echo $poll['id']; ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this poll?');">Delete</a>
-                                    </td>
-                                </tr>
-                            <?php endwhile; ?>
-                        <?php else: ?>
-                            <tr>
-                                <td colspan="6" class="text-center">No polls found.</td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
+                    <?php if ($pollsOverview && mysqli_num_rows($pollsOverview) > 0): ?>
+    <?php while ($poll = mysqli_fetch_assoc($pollsOverview)): ?>
+        <tr>
+            <td><?php echo $poll['project_title']; ?></td>
+            <td><?php echo $poll['created_date']; ?></td>
+            <td><?php echo $poll['created_by']; ?></td>
+            <td><?php echo $poll['votes']; ?></td>
+            <td><?php echo ucfirst($poll['status']); ?></td>
+            <td>
+                <a href="view_poll.php?id=<?php echo $poll['id']; ?>" class="btn btn-primary btn-sm">View</a>
+                <a href="delete_poll.php?id=<?php echo $poll['id']; ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this poll?');">Delete</a>
+            </td>
+        </tr>
+    <?php endwhile; ?>
+<?php else: ?>
+    <tr>
+        <td colspan="6" class="text-center">No polls found.</td>
+    </tr>
+<?php endif; ?>
+</tbody>
                 </table>
             </div>
         </div>
