@@ -2,7 +2,7 @@
 <div class="sidebar" style="width: 250px; background-color: #0B1042; height: 100vh; position: fixed; top: 0; left: 0; box-shadow: 2px 0 5px rgba(0,0,0,0.1);">
     <div class="sidebar-header" style="padding: 20px; text-align: center;">
         <img src="../icons/mainlogo.png" alt="Prayojan" style="width: 80px; height: auto; margin-bottom: 10px;">
-        <h4 style="margin: 0; font-family: Arial, sans-serif; font-weight: bold; color: #ffffff;">PRAYOJAN</h4>
+        <!-- <h4 style="margin: 0; font-family: Arial, sans-serif; font-weight: bold; color: #ffffff;">PRAYOJAN</h4> -->
     </div>
     <ul class="sidebar-menu" style="list-style: none; padding: 0; margin: 0;">
         <!-- Home -->

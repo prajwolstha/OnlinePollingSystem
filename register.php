@@ -198,7 +198,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <div class="col-sm-6 text-black">
                     <div class="px-5 ms-xl-4">
                         <i class="fas fa-user-circle fa-2x me-3 pt-5 mt-xl-4" style="color: #2ba5e8;"></i>
-                        <span class="header-text">Register - Online Polling System</span>
+                        <!-- <span class="header-text">Register - Online Polling System</span> -->
                     </div>
                     <div class="d-flex align-items-center register-section px-5 ms-xl-4 mt-5 pt-5 pt-xl-0 mt-xl-n5">
                         <form style="width: 23rem;" method="post" action="" onsubmit="return submitForm();">
