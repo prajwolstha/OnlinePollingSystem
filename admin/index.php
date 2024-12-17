@@ -5,6 +5,11 @@ if (!$conn) {
     die("Database connection failed: " . mysqli_connect_error());
 }
 
+
+
+
+
+
 // Fetch total polls
 $result = mysqli_query($conn, "SELECT COUNT(*) as total FROM polls");
 $totalPolls = 0; // Initialize default

@@ -3,25 +3,35 @@ include '../includes/sidebar.php';
 include '../includes/header.php';
 include '../connection.php';
 
-// Check database connection
+// Establish database connection
 if (!$conn) {
     die("Database connection failed: " . mysqli_connect_error());
 }
 
-// Fetch all users
-$searchQuery = "";
-if (isset($_GET['search'])) {
-    $searchQuery = $conn->real_escape_string($_GET['search']);
-    $users = $conn->query("SELECT * FROM prayojan WHERE name LIKE '%$searchQuery%' OR email LIKE '%$searchQuery%'");
-} else {
-    $users = $conn->query("SELECT * FROM prayojan");
+// Simulate user activity: Update last_active column for a logged-in user (replace with real user ID)
+if (isset($_SESSION['user_id'])) {
+    $userId = $_SESSION['user_id'];
+    $updateLastActive = "UPDATE prayojan SET last_active = NOW() WHERE id = $userId";
+    mysqli_query($conn, $updateLastActive);
 }
 
-// Define roles for filtering
+// Initialize the search query
+$searchQuery = "";
+if (isset($_GET['search']) && trim($_GET['search']) != '') {
+    $searchQuery = mysqli_real_escape_string($conn, $_GET['search']);
+    $query = "SELECT * FROM prayojan WHERE name LIKE '%$searchQuery%' OR email LIKE '%$searchQuery%'";
+} else {
+    $query = "SELECT * FROM prayojan";
+}
+
+// Apply role filter if present
 $roleFilter = $_GET['role'] ?? '';
 if ($roleFilter) {
-    $users = $conn->query("SELECT * FROM prayojan WHERE role='$roleFilter'");
+    $query .= " AND role = '" . mysqli_real_escape_string($conn, $roleFilter) . "'";
 }
+
+// Execute the query
+$users = mysqli_query($conn, $query);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -128,24 +138,24 @@ if ($roleFilter) {
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if ($users && $users->num_rows > 0): ?>
-                            <?php while ($user = $users->fetch_assoc()): ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($user['name'] ?? 'N/A'); ?></td>
-                                    <td><?php echo htmlspecialchars($user['email'] ?? 'N/A'); ?></td>
-                                    <td><?php echo htmlspecialchars($user['role'] ?? 'N/A'); ?></td>
-                                    <td><?php echo htmlspecialchars($user['created_at'] ?? 'N/A'); ?></td>
-                                    <td><?php echo htmlspecialchars($user['last_active'] ?? 'N/A'); ?></td>
-                                    <td>
-                                        <a href="block_user.php?id=<?php echo $user['id']; ?>" class="btn btn-danger btn-sm">Block User</a>
-                                    </td>
-                                </tr>
-                            <?php endwhile; ?>
-                        <?php else: ?>
+                    <?php if ($users && mysqli_num_rows($users) > 0): ?>
+                        <?php while ($user = mysqli_fetch_assoc($users)): ?>
                             <tr>
-                                <td colspan="6" class="text-center">No users found.</td>
+                                <td><?php echo $user['name'] ?? 'N/A'; ?></td>
+                                <td><?php echo $user['email'] ?? 'N/A'; ?></td>
+                                <td><?php echo $user['role'] ?? 'N/A'; ?></td>
+                                <td><?php echo $user['created_at'] ?? 'N/A'; ?></td>
+                                <td><?php echo $user['last_active'] ?? 'N/A'; ?></td>
+                                <td>
+                                    <a href="block_user.php?id=<?php echo $user['id']; ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to block this user?');">Block User</a>
+                                </td>
                             </tr>
-                        <?php endif; ?>
+                        <?php endwhile; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="6" class="text-center">No users found.</td>
+                        </tr>
+                    <?php endif; ?>
                     </tbody>
                 </table>
             </div>

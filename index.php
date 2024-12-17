@@ -7,6 +7,18 @@ include 'connection.php';
 // }
 
 
+
+
+
+$userId = $_SESSION['user_id']; // Assuming user ID is stored in session after login
+
+// Update last_active field
+$updateLastActive = "UPDATE prayojan SET last_active = NOW() WHERE id = $userId";
+mysqli_query($conn, $updateLastActive);
+
+
+
+
 // Fetch user details
 $email = $_SESSION['email'];
 $sql = "SELECT * FROM prayojan WHERE email='$email'";

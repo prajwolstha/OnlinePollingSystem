@@ -18,6 +18,7 @@ if ($result) {
     }
 }
 
+
 // Fetch total users
 $result = mysqli_query($conn, "SELECT COUNT(*) AS total FROM prayojan");
 $totalUsers = 0; // Initialize default
